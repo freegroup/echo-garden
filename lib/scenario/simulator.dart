@@ -6,6 +6,7 @@ import 'package:echo_garden/model/intvector2.dart';
 import 'package:echo_garden/model/scheduler/base.dart';
 import 'package:echo_garden/model/scheduler/random.dart';
 import 'package:echo_garden/model/simulator.dart';
+import 'package:echo_garden/scenario/configuration.dart';
 import 'package:echo_garden/scenario/flower.dart';
 import 'package:echo_garden/scenario/grass.dart';
 import 'package:echo_garden/scenario/patch.dart';
@@ -27,7 +28,7 @@ class EchoGardenSimulator extends Simulator {
   late final BaseScheduler _patchScheduler;
 
   double _accumulator = 0.0;
-  final double _updateInterval = 1.1; // 100ms in seconds
+  final double _updateInterval = 0.1; // 100ms in seconds
 
   EchoGardenSimulator({required super.width, required super.height}) {
     _rabbitScheduler = RandomScheduler(model: this);
@@ -115,10 +116,14 @@ class EchoGardenSimulator extends Simulator {
     var stopwatch = Stopwatch()..start();
 
     // Define the total number of agents to place for each type
-    int totalGrass = (width * height * 0.05).toInt(); // Example: 5% of the grid
-    int totalWeed = (width * height * 0.02).toInt(); // Example: 2% of the grid
-    int totalFlower = (width * height * 0.005).toInt(); // Example: 1% of the grid
-    int totalTree = (width * height * 0.001).toInt(); // Example: 0.1% of the grid
+    int totalGrass = (width * height * kConfiguration.plant.grass.growPercentage)
+        .toInt(); // Example: 5% of the grid
+    int totalWeed = (width * height * kConfiguration.plant.weed.growPercentage)
+        .toInt(); // Example: 2% of the grid
+    int totalFlower = (width * height * kConfiguration.plant.flower.growPercentage)
+        .toInt(); // Example: 1% of the grid
+    int totalTree = (width * height * kConfiguration.plant.tree.growPercentage)
+        .toInt(); // Example: 0.1% of the grid
 
     void tryPlaceAgent(int total, Function(IntVector2) placeFunction, {int radius = 1}) {
       final random = Random();
@@ -128,13 +133,12 @@ class EchoGardenSimulator extends Simulator {
         // Randomly select a starting cell
         int x = random.nextInt(width);
         int y = random.nextInt(height);
-        IntVector2 position = IntVector2(x, y);
 
         // Expand the search within the specified radius around the chosen cell
         for (int dx = -radius; dx <= radius && !placed; dx++) {
           for (int dy = -radius; dy <= radius && !placed; dy++) {
-            int newX = (position.x + dx + width) % width; // Ensure wrapping around the grid
-            int newY = (position.y + dy + height) % height;
+            int newX = (x + dx + width) % width; // Ensure wrapping around the grid
+            int newY = (y + dy + height) % height;
             IntVector2 newCell = IntVector2(newX, newY);
 
             // If a position is empty, place the agent and mark as placed
@@ -159,75 +163,5 @@ class EchoGardenSimulator extends Simulator {
 
     // Print the elapsed time
     print('Grow function took ${stopwatch.elapsedMilliseconds} milliseconds');
-  }
-
-  void _grow2() {
-    var stopwatch = Stopwatch()..start();
-
-    final random = Random();
-    // Define the total number of agents to place for each type
-    int totalGrass = (width * height * 0.05).toInt(); // Example: 5% of the grid
-    int totalWeed = (width * height * 0.02).toInt(); // Example: 2% of the grid
-    int totalFlower = (width * height * 0.005).toInt(); // Example: 1% of the grid
-    int totalTree = (width * height * 0.001).toInt(); // Example: 0.1% of the grid
-
-    // A helper function to try placing an agent
-    void tryPlaceAgent(int total, Function(IntVector2) placeFunction) {
-      for (int i = 0; i < total; i++) {
-        int x = random.nextInt(width);
-        int y = random.nextInt(height);
-        IntVector2 position = IntVector2(x, y);
-
-        // Check if the position is empty
-        if (getAgentAtPosition<Agent>(position) == null) {
-          placeFunction(position);
-        }
-        // Note: If the position is not empty, this attempt is simply skipped.
-        // You could implement a retry mechanism with a limit to improve placement success.
-      }
-    }
-
-    // Attempt to place each type of agent
-    tryPlaceAgent(totalGrass, (cell) => GrassPatch(scheduler: _patchScheduler, cell: cell));
-    tryPlaceAgent(totalWeed, (cell) => WeedPatch(scheduler: _patchScheduler, cell: cell));
-    tryPlaceAgent(totalFlower, (cell) => FlowerPatch(scheduler: _patchScheduler, cell: cell));
-    tryPlaceAgent(totalTree, (cell) => TreePatch(scheduler: _patchScheduler, cell: cell));
-
-    // Stop the stopwatch
-    stopwatch.stop();
-
-    // Print the elapsed time
-    print('Grow function took ${stopwatch.elapsedMilliseconds} milliseconds');
-  }
-
-  void _grow1() {
-    // Create and start the stopwatch
-    var stopwatch = Stopwatch()..start();
-
-    var random = Random();
-    for (int x = 0; x < width; x++) {
-      for (int y = 0; y < height; y++) {
-        bool empty = getAgentAtPosition<Agent>(IntVector2(x, y)) == null;
-        if (empty) {
-          int g = random.nextInt(30);
-          // Simplified decision logic
-          if (g <= 12) {
-            GrassPatch(scheduler: _patchScheduler, x: x, y: y);
-          } else if (g <= 14) {
-            WeedPatch(scheduler: _patchScheduler, x: x, y: y);
-          } else if (g == 15) {
-            FlowerPatch(scheduler: _patchScheduler, x: x, y: y);
-          }
-        }
-      }
-    }
-
-    // Stop the stopwatch
-    stopwatch.stop();
-
-    // Print the elapsed time
-    print('Grow function took ${stopwatch.elapsedMilliseconds} milliseconds');
-    // For more precise measurement, you can use elapsedMicroseconds
-    //print('Grow function took ${stopwatch.elapsedMicroseconds} microseconds');
   }
 }

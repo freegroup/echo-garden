@@ -5,9 +5,9 @@ import 'package:echo_garden/model/intvector2.dart';
 import 'package:echo_garden/model/random.dart';
 import 'package:echo_garden/model/strategy/base.dart';
 import 'package:echo_garden/scenario/configuration.dart';
-import 'package:echo_garden/scenario/patch.dart';
+import 'package:echo_garden/scenario/plant.dart';
 import 'package:echo_garden/scenario/water.dart';
-import 'package:flutter/material.dart';
+import 'package:flame/extensions.dart';
 
 class RabbitAgent extends Agent {
   double energy = 1;
@@ -18,7 +18,12 @@ class RabbitAgent extends Agent {
   RabbitAgent({required super.scheduler, super.x, super.y, super.cell}) {
     strategy = MovementStrategy(model: scheduler.model);
     energy = Random().nextInt(kConfiguration.rabbit.initEnergy).toDouble();
-    paint.color = Colors.brown;
+    paint.color = kConfiguration.rabbit.color;
+  }
+
+  @override
+  void render(Canvas canvas) {
+    canvas.drawOval(size.toRect(), paint);
   }
 
   @override
@@ -33,7 +38,8 @@ class RabbitAgent extends Agent {
   }
 
   void _move() {
-    Set<IntVector2> possibleMoves = strategy.getNeighborhoodWithoutType<WaterPatch>(cell: cell);
+    Set<IntVector2> possibleMoves =
+        strategy.getNeighborhoodWithoutType<WaterPatch>(includeCenter: false, cell: cell);
     IntVector2? newCell = pickRandomElement(possibleMoves);
     if (newCell != null) {
       model.move(this, newCell);
@@ -41,7 +47,7 @@ class RabbitAgent extends Agent {
   }
 
   void _eat() {
-    Patch? patch = model.getAgentAtPosition<Patch>(cell);
+    Plant? patch = model.getAgentAtPosition<Plant>(cell);
     if (patch != null && patch.energy < kConfiguration.rabbit.maxEnergyCanEat) {
       energy = energy + patch.energy;
       patch.die();
