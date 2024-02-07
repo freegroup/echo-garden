@@ -1,12 +1,12 @@
 import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/utils/intvector2.dart';
 import 'package:echo_garden/model/actors/actor.dart';
 import 'package:echo_garden/model/agent.dart';
 import 'package:echo_garden/model/objects/plant.dart';
-import 'package:echo_garden/utils/random.dart';
 import 'package:echo_garden/model/strategy/base.dart';
+import 'package:echo_garden/utils/random.dart';
+import 'package:flame/components.dart';
 
 class RabbitAgent extends ActorModel {
   double energy = 1;
@@ -31,12 +31,12 @@ class RabbitAgent extends ActorModel {
   }
 
   void _move() {
-    Set<IntVector2> possibleMoves = strategy.getNeighborhood(
+    Set<Vector2> possibleMoves = strategy.getNeighborhood(
       includeCenter: false,
       cell: cell,
       layerTypeId: ActorModel.staticTypeId,
     );
-    IntVector2? newCell = pickRandomElement(possibleMoves);
+    Vector2? newCell = pickRandomElement(possibleMoves);
     if (newCell != null) {
       gameRef.move(this, newCell);
     }

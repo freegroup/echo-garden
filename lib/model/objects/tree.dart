@@ -1,13 +1,14 @@
 import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/utils/intvector2.dart';
+
 import 'package:echo_garden/model/agent.dart';
 import 'package:echo_garden/model/objects/patch.dart';
 import 'package:echo_garden/model/objects/plant.dart';
 import 'package:echo_garden/model/objects/seedable.dart';
 import 'package:echo_garden/utils/random.dart';
 import 'package:echo_garden/model/strategy/base.dart';
+import 'package:flame/components.dart';
 
 class TreeModel extends PlantModel {
   late final MovementStrategy strategy;
@@ -38,7 +39,7 @@ class TreeModel extends PlantModel {
 
     if (energy >= kConfiguration.plant.tree.seedEnergy) {
       var cells = strategy.getNeighborhood(cell: cell, layerTypeId: PlantModel.staticTypeId);
-      IntVector2? cellCandidate = pickRandomElement(cells);
+      Vector2? cellCandidate = pickRandomElement(cells);
       if (cellCandidate != null) {
         AgentModel? patch = gameRef.getAgentAtCell(cellCandidate, PatchModel.staticTypeId);
         AgentModel? plant = gameRef.getAgentAtCell(cellCandidate, PlantModel.staticTypeId);

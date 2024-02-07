@@ -1,17 +1,17 @@
 import 'package:echo_garden/model/game.dart';
-import 'package:echo_garden/utils/intvector2.dart';
 import 'package:echo_garden/model/scheduler/base.dart';
+import 'package:flame/components.dart';
 
 class AgentModel {
   static String staticTypeId = "AgentModel";
-  late IntVector2 cell;
+  late Vector2 cell;
   final BaseScheduler scheduler;
 
   AgentModel({required this.scheduler, x = 0, y = 0, cell}) {
     if (cell != null) {
       this.cell = cell;
     } else {
-      this.cell = IntVector2(x, y);
+      this.cell = Vector2(x, y);
     }
     scheduler.add(this);
   }
