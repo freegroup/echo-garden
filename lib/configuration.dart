@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-var kConfiguration = (
-  world: (
+const kConfiguration = (
+  world:(
     width: 50,
     height: 100,
   ),
@@ -36,7 +36,7 @@ var kConfiguration = (
       seedEnergy: 9.0,
       seedPercentage: 0.1,
       growPercentage: 0.0005,
-      color: Colors.deepPurpleAccent[700]!.withOpacity(0.01)
+      color: Colors.deepPurpleAccent,
     ),
   )
 );

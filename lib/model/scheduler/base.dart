@@ -1,12 +1,10 @@
-import 'dart:math';
-
 import 'package:echo_garden/model/agent.dart';
-import 'package:echo_garden/model/simulator.dart';
+import 'package:echo_garden/model/game.dart';
 
 /// A simple scheduler that activates agents one at a time, in the order they were added.
 ///
-/// This scheduler is designed to replicate the behavior of the scheduler in M
-/// ASON, a multi-agent simulation toolkit. It assumes that each agent added
+/// This scheduler is designed to replicate the behavior of the scheduler in MASON,
+/// a multi-agent simulation toolkit. It assumes that each agent added
 /// has a step method which takes no arguments and executes the agent’s actions.
 ///
 class BaseScheduler {
@@ -14,19 +12,17 @@ class BaseScheduler {
   int steps = 0;
 
   // The model instance associated with the scheduler.
-  final Simulator model;
+  final GameModel gameRef;
 
   // the agents to manage
-  late Set<Agent> agents;
+  late Set<AgentModel> agents = <AgentModel>{};
 
-  BaseScheduler({required this.model, Set<Agent>? agents}) {
-    this.agents = agents ?? <Agent>{};
-  }
+  BaseScheduler({required this.gameRef});
 
-  void add(agent) {
+  void add(AgentModel agent) {
     if (!agents.contains(agent)) {
       agents.add(agent);
-      model.add(agent);
+      gameRef.add(agent);
     } else {
       print("is already member of the Scheduler: $agent");
     }
@@ -34,12 +30,11 @@ class BaseScheduler {
 
   void remove(agent) {
     agents.remove(agent);
-    model.remove(agent);
   }
 
   void step() {
-    List<Agent> numbersList = agents.toList();
-    for (Agent agent in numbersList) {
+    List<AgentModel> numbersList = agents.toList();
+    for (AgentModel agent in numbersList) {
       agent.preStep();
       agent.step();
       agent.postStep();

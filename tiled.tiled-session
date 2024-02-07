@@ -1,0 +1,47 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "assets/tiles/world.tmx",
+    "expandedProjectPaths": [
+        ".",
+        "assets/tiles",
+        "assets"
+    ],
+    "fileStates": {
+        "": {
+            "scaleInEditor": 1
+        },
+        "assets/tiles/world.tmx": {
+            "scale": 0.33,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 2372.727272727273,
+                "y": 925.7575757575756
+            }
+        },
+        "assets/tiles/world.tmx#Overworld": {
+            "scaleInDock": 1
+        },
+        "assets/tiles/world.tmx#world": {
+            "scaleInDock": 1
+        }
+    },
+    "last.imagePath": "/Users/d023280/Downloads/gfx",
+    "map.height": 40,
+    "map.lastUsedFormat": "tmx",
+    "map.width": 40,
+    "openFiles": [
+        "assets/tiles/world.tmx"
+    ],
+    "project": "tiled.tiled-project",
+    "recentFiles": [
+        "assets/tiles/world.tmx"
+    ],
+    "tileset.embedInMap": true,
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}

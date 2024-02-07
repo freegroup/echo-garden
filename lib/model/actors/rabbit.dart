@@ -1,29 +1,22 @@
 import 'dart:math';
 
+import 'package:echo_garden/configuration.dart';
+import 'package:echo_garden/utils/intvector2.dart';
+import 'package:echo_garden/model/actors/actor.dart';
 import 'package:echo_garden/model/agent.dart';
-import 'package:echo_garden/model/intvector2.dart';
-import 'package:echo_garden/model/random.dart';
+import 'package:echo_garden/model/objects/plant.dart';
+import 'package:echo_garden/utils/random.dart';
 import 'package:echo_garden/model/strategy/base.dart';
-import 'package:echo_garden/scenario/configuration.dart';
-import 'package:echo_garden/scenario/plant.dart';
-import 'package:echo_garden/scenario/water.dart';
-import 'package:flame/extensions.dart';
 
-class RabbitAgent extends Agent {
+class RabbitAgent extends ActorModel {
   double energy = 1;
   double birthThreshold = kConfiguration.rabbit.birthThreshold;
 
   late final MovementStrategy strategy;
 
   RabbitAgent({required super.scheduler, super.x, super.y, super.cell}) {
-    strategy = MovementStrategy(model: scheduler.model);
+    strategy = MovementStrategy(model: scheduler.gameRef);
     energy = Random().nextInt(kConfiguration.rabbit.initEnergy).toDouble();
-    paint.color = kConfiguration.rabbit.color;
-  }
-
-  @override
-  void render(Canvas canvas) {
-    canvas.drawOval(size.toRect(), paint);
   }
 
   @override
@@ -38,19 +31,24 @@ class RabbitAgent extends Agent {
   }
 
   void _move() {
-    Set<IntVector2> possibleMoves =
-        strategy.getNeighborhoodWithoutType<WaterPatch>(includeCenter: false, cell: cell);
+    Set<IntVector2> possibleMoves = strategy.getNeighborhood(
+      includeCenter: false,
+      cell: cell,
+      layerTypeId: ActorModel.staticTypeId,
+    );
     IntVector2? newCell = pickRandomElement(possibleMoves);
     if (newCell != null) {
-      model.move(this, newCell);
+      gameRef.move(this, newCell);
     }
   }
 
   void _eat() {
-    Plant? patch = model.getAgentAtPosition<Plant>(cell);
-    if (patch != null && patch.energy < kConfiguration.rabbit.maxEnergyCanEat) {
-      energy = energy + patch.energy;
-      patch.die();
+    AgentModel? patch = gameRef.getAgentAtCell(cell, PlantModel.staticTypeId);
+    if (patch != null && patch is PlantModel) {
+      if (patch.energy < kConfiguration.rabbit.maxEnergyCanEat) {
+        energy = energy + patch.energy;
+        patch.die();
+      }
     }
   }
 

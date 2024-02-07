@@ -1,5 +1,6 @@
-import 'package:echo_garden/scenario/configuration.dart';
-import 'package:echo_garden/scenario/plant.dart';
+import 'package:echo_garden/configuration.dart';
+import 'package:echo_garden/visual/objects/plant.dart';
+
 
 class FlowerPatch extends Plant {
   FlowerPatch({required super.scheduler, super.x, super.y, super.cell}) {

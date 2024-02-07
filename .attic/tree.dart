@@ -1,12 +1,13 @@
 import 'dart:math';
 
-import 'package:echo_garden/model/intvector2.dart';
+import 'package:echo_garden/intvector2.dart';
 import 'package:echo_garden/model/random.dart';
 import 'package:echo_garden/model/strategy/base.dart';
-import 'package:echo_garden/scenario/configuration.dart';
-import 'package:echo_garden/scenario/patch.dart';
-import 'package:echo_garden/scenario/plant.dart';
-import 'package:echo_garden/scenario/water.dart';
+import 'package:echo_garden/configuration.dart';
+import 'package:echo_garden/visual/objects/patch.dart';
+import 'package:echo_garden/visual/objects/plant.dart';
+import 'package:echo_garden/visual/objects/water.dart';
+
 import 'package:flame/extensions.dart';
 
 class TreePatch extends Plant {

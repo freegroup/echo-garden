@@ -1,8 +1,10 @@
 import 'dart:math';
 
-List<List<double>> diamondSquare(int width, int height) {
-  int size = _calculateMinimumSize(width, height);
-  final int n = pow(2, size).toInt() + 1; // Ensure grid size is 2^n + 1
+import 'package:flame/game.dart';
+
+List<List<double>> diamondSquare(Vector2 size) {
+  double maxSize = _calculateMinimumSize(size);
+  final int n = pow(2, maxSize).toInt() + 1; // Ensure grid size is 2^n + 1
   List<List<double>> map = List.generate(n, (_) => List.filled(n, 0.0));
   final Random rand = Random();
   double scale = 1.0;
@@ -44,12 +46,12 @@ List<List<double>> diamondSquare(int width, int height) {
   return map;
 }
 
-int _calculateMinimumSize(int width, int height) {
-  int maxDimension = max(width, height);
-  int size = 0;
+double _calculateMinimumSize(Vector2 size) {
+  double maxDimension = max(size.x, size.y);
+  double maxSize = 0;
   // Find the smallest size such that (2^size + 1) >= maxDimension
-  while ((pow(2, size) + 1) < maxDimension) {
-    size++;
+  while ((pow(2, maxSize) + 1) < maxDimension) {
+    maxSize++;
   }
-  return size;
+  return maxSize;
 }
