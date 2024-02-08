@@ -34,7 +34,7 @@ class RabbitAgent extends ActorModel {
     Set<Vector2> possibleMoves = strategy.getNeighborhood(
       includeCenter: false,
       cell: cell,
-      layerTypeId: ActorModel.staticTypeId,
+      layerId: ActorModel.staticLayerId,
     );
     Vector2? newCell = pickRandomElement(possibleMoves);
     if (newCell != null) {
@@ -43,7 +43,7 @@ class RabbitAgent extends ActorModel {
   }
 
   void _eat() {
-    AgentModel? patch = gameModelRef.getAgentAtCell(cell, PlantModel.staticTypeId);
+    AgentModel? patch = gameModelRef.getAgentAtCell(cell, PlantModel.staticLayerId);
     if (patch != null && patch is PlantModel) {
       if (patch.energy < kGameConfiguration.rabbit.maxEnergyCanEat) {
         energy = energy + patch.energy;

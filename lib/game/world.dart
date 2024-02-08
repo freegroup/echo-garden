@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/actors/player.dart';
+import 'package:echo_garden/game/agent.dart';
 
 import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/game/layer.dart';
@@ -19,13 +20,18 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   late Vector2 _canvasSize;
   late Vector2 _modelSize;
   final Map<Vector2, PositionComponent> _squareComponents = {};
-  late TileLayer _tileLayer;
 
   Rect _cellToShow = const Rect.fromLTWH(0, 0, 0, 0);
+  late Map<String, TileLayer> _layersMap;
 
   WorldVisualization({required this.gameModel, super.children}) {
     _modelSize = Vector2(kGameConfiguration.tileMap.width, kGameConfiguration.tileMap.width);
     _canvasSize = _modelSize * kGameConfiguration.world.tileSize;
+    _layersMap = {
+      PatchModel.staticLayerId: TileLayer(priority: 0),
+      PlantModel.staticLayerId: TileLayer(priority: 1),
+      ActorModel.staticLayerId: TileLayer(priority: 2),
+    };
   }
 
   set cellsToShow(Rect cells) {
@@ -41,7 +47,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     _squareComponents.removeWhere((cell, square) {
       final shouldRemove = !_cellToShow.containsVector2(cell);
       if (shouldRemove) {
-        _tileLayer.remove(square);
+        _layersMap.forEach((key, layer) => layer.remove(square));
       }
       return shouldRemove;
     });
@@ -64,15 +70,10 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
         Vector2 cell = Vector2(x.toDouble(), y.toDouble());
 
         // Check if there's an agent at this cell and if it's not already represented by a component
-        final agent = gameModel.getLayer(PatchModel.staticTypeId).get(cell);
+        final agent = gameModel.getLayer(PatchModel.staticLayerId).get(cell);
         if (agent != null && !_squareComponents.containsKey(cell)) {
-          late PositionComponent newComponent;
-          if (agent is WaterModel) {
-            newComponent = WaterTile(position: cell * kGameConfiguration.world.tileSize);
-          } else {
-            newComponent = GrassTile(position: cell * kGameConfiguration.world.tileSize);
-          }
-          _tileLayer.add(newComponent);
+          late PositionComponent newComponent = _createComponentByModel(agent);
+          _layersMap[agent.layerId]!.add(newComponent);
           _squareComponents[cell] = newComponent;
         }
       }
@@ -87,10 +88,9 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
 
   @override
   Future<void> onLoad() async {
-    _tileLayer = TileLayer(priority: 0);
     _player = EmberPlayer(position: Vector2(10, 10));
 
-    addAll([_tileLayer, _player]);
+    addAll([..._layersMap.values, _player]);
 
     gameRef.cameraComponent.follow(_player);
     cellsToShow = Rect.fromLTWH(
@@ -116,5 +116,25 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
         _canvasSize.y - gameSize.y / 2,
       ),
     );
+  }
+
+  void onModelAdded(AgentModel agent) {
+    // check if the agent in the visible area an add them if yes
+    if (_cellToShow.containsVector2(agent.cell)) {
+      var component = _createComponentByModel(agent);
+      _layersMap[agent.layerId]!.add(component);
+      _squareComponents[agent.cell] = component;
+    }
+  }
+
+  void onModelRemoved(AgentModel agent) {}
+
+  void onModelMoved(AgentModel agent) {}
+
+  AgentVisualization _createComponentByModel(AgentModel agent) {
+    if (agent is WaterModel) {
+      return WaterTile(position: agent.cell * kGameConfiguration.world.tileSize);
+    }
+    return GrassTile(position: agent.cell * kGameConfiguration.world.tileSize);
   }
 }

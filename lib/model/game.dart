@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
+import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/model/actors/actor.dart';
 import 'package:echo_garden/model/agent.dart';
 import 'package:echo_garden/model/layer.dart';
@@ -17,10 +18,10 @@ import 'package:echo_garden/model/terraformer/diamond_square.dart';
 import 'package:flame/game.dart';
 
 class GameModel {
-
   late final Vector2 _size;
   late final BaseScheduler _rabbitScheduler;
   late final BaseScheduler _patchScheduler;
+  GameVisualization? gameVisualization;
 
   late Map<String, Layer> layersMap;
 
@@ -30,9 +31,9 @@ class GameModel {
   GameModel(Vector2 size) {
     _size = size;
     layersMap = {
-      PatchModel.staticTypeId: Layer(_size),
-      PlantModel.staticTypeId: Layer(_size),
-      ActorModel.staticTypeId: Layer(_size),
+      PatchModel.staticLayerId: Layer(_size),
+      PlantModel.staticLayerId: Layer(_size),
+      ActorModel.staticLayerId: Layer(_size),
     };
 
     _rabbitScheduler = BaseScheduler(gameModelRef: this);
@@ -71,8 +72,9 @@ class GameModel {
   }
 
   void add(AgentModel agent) {
-    var layer = layersMap[agent.typeId]!;
+    var layer = layersMap[agent.layerId]!;
     layer.add(agent.cell, agent);
+    gameVisualization?.onModelAdded(agent);
   }
 
   void remove(AgentModel agent) {
@@ -81,17 +83,19 @@ class GameModel {
     }
     _rabbitScheduler.remove(agent);
     _patchScheduler.remove(agent);
+    gameVisualization?.onModelRemoved(agent);
   }
 
   void move(AgentModel agent, Vector2 newCell) {
     for (var layer in layersMap.values) {
       layer.move(agent, newCell);
     }
+    gameVisualization?.onModelMoved(agent);
   }
 
   // Method to get a random agent of type T at a specific cell position
-  AgentModel? getAgentAtCell(Vector2 cell, String typeId) {
-    var layer = layersMap[typeId];
+  AgentModel? getAgentAtCell(Vector2 cell, String layerId) {
+    var layer = layersMap[layerId];
     if (layer == null) {
       return null;
     }
@@ -99,8 +103,8 @@ class GameModel {
   }
 
   // Method to get a random agent of type T at a specific cell position
-  Layer getLayer(String typeId) {
-    return layersMap[typeId]!;
+  Layer getLayer(String layerId) {
+    return layersMap[layerId]!;
   }
 
   void step() {
@@ -136,7 +140,7 @@ class GameModel {
             Vector2 newCell = Vector2(newX, newY);
 
             // If a position is empty, place the agent and mark as placed
-            if (getAgentAtCell(newCell, PlantModel.staticTypeId) == null) {
+            if (getAgentAtCell(newCell, PlantModel.staticLayerId) == null) {
               placeFunction(newCell);
               placed = true;
             }

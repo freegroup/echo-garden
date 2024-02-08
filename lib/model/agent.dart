@@ -4,7 +4,7 @@ import 'package:echo_garden/model/scheduler/base.dart';
 import 'package:flame/components.dart';
 
 class AgentModel {
-  static String staticTypeId = "AgentModel";
+  static String staticLayerId = "AgentModel";
   late Vector2 cell;
   final BaseScheduler scheduler;
   AgentVisualization? visualization;
@@ -20,7 +20,7 @@ class AgentModel {
 
   GameModel get gameModelRef => scheduler.gameModelRef;
 
-  String get typeId => AgentModel.staticTypeId;
+  String get layerId => AgentModel.staticLayerId;
 
   void preStep() {}
 

@@ -10,7 +10,7 @@ class MovementStrategy {
     required Vector2 cell,
     bool includeCenter = false,
     int radius = 1,
-    required String layerTypeId,
+    required String layerId,
   }) {
     Set<Vector2> cells = {};
 
@@ -21,7 +21,7 @@ class MovementStrategy {
         double newX = ((cell.x + dx + model.width) % model.width);
         double newY = ((cell.y + dy + model.height) % model.height);
         Vector2 newCell = Vector2(newX, newY);
-        if (model.getAgentAtCell(newCell, layerTypeId) == null) {
+        if (model.getAgentAtCell(newCell, layerId) == null) {
           cells.add(newCell);
         }
       }

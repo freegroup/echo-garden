@@ -38,11 +38,11 @@ class TreeModel extends PlantModel {
     }
 
     if (energy >= kGameConfiguration.plant.tree.seedEnergy) {
-      var cells = strategy.getNeighborhood(cell: cell, layerTypeId: PlantModel.staticTypeId);
+      var cells = strategy.getNeighborhood(cell: cell, layerId: PlantModel.staticLayerId);
       Vector2? cellCandidate = pickRandomElement(cells);
       if (cellCandidate != null) {
-        AgentModel? patch = gameModelRef.getAgentAtCell(cellCandidate, PatchModel.staticTypeId);
-        AgentModel? plant = gameModelRef.getAgentAtCell(cellCandidate, PlantModel.staticTypeId);
+        AgentModel? patch = gameModelRef.getAgentAtCell(cellCandidate, PatchModel.staticLayerId);
+        AgentModel? plant = gameModelRef.getAgentAtCell(cellCandidate, PlantModel.staticLayerId);
         if (patch is SeedableModel && plant is! TreeModel) {
           TreeModel(scheduler: scheduler, cell: cellCandidate);
           plant?.die();

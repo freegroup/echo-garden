@@ -1,4 +1,5 @@
 import 'package:echo_garden/game/world.dart';
+import 'package:echo_garden/model/agent.dart';
 import 'package:echo_garden/model/game.dart';
 import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
@@ -24,5 +25,17 @@ class GameVisualization extends FlameGame with HasKeyboardHandlerComponents {
     ]);
 
     addAll([cameraComponent, world]);
+  }
+
+  void onModelAdded(AgentModel agent) {
+    world.onModelAdded(agent);
+  }
+
+  void onModelRemoved(AgentModel agent) {
+    world.onModelRemoved(agent);
+  }
+
+  void onModelMoved(AgentModel agent) {
+    world.onModelMoved(agent);
   }
 }
