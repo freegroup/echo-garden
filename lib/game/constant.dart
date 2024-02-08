@@ -1,9 +1,9 @@
-const double worldMapSizeWidth = 400;
-const double worldMapSizeHeight = 400;
+const double worldMapSizeWidth = 1000;
+const double worldMapSizeHeight = 500;
 
-const double worldLoadedRadius = 60;
+const double worldLoadedRadius = 40;
 
-const double worldTileSize = 16;
+const double worldTileSize = 32;
 
 const String tileMapImage = "world.png";
 const double tileMapSpriteSize = 64;

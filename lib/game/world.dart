@@ -4,8 +4,10 @@ import 'package:echo_garden/game/actors/player.dart';
 import 'package:echo_garden/game/constant.dart';
 import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/game/layer.dart';
+import 'package:echo_garden/game/objects/grass.dart';
 import 'package:echo_garden/game/objects/square.dart';
 import 'package:echo_garden/game/objects/tile.dart';
+import 'package:echo_garden/game/objects/water.dart';
 import 'package:echo_garden/main.dart';
 import 'package:echo_garden/model/index.dart' as model;
 import 'package:flame/components.dart';
@@ -53,13 +55,12 @@ class EchoGardenWorld extends World with HasGameRef<EchoGardenGame> {
       if (_cellToShow.containsVector2(cell) && !_squareComponents.containsKey(cell)) {
         late PositionComponent newComponent;
         if (agent is model.WaterModel) {
-          newComponent = ColoredSquare.blue(cell * worldTileSize);
+          newComponent = WaterTile(position: cell * worldTileSize);
         } else {
-          newComponent =
-              TileSquare(position: cell * worldTileSize, spritePosition: Vector2(128, 32));
+          newComponent = GrassTile(position: cell * worldTileSize);
         }
-        _tileLayer.add(newComponent); // Assuming 'add' adds the component to the world
-        _squareComponents[cell] = newComponent; // Track the new component
+        _tileLayer.add(newComponent);
+        _squareComponents[cell] = newComponent;
       }
     }
   }
