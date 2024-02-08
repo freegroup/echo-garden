@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="40" height="40" tilewidth="64" tileheight="64" infinite="0" nextlayerid="6" nextobjectid="1">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="80" height="80" tilewidth="64" tileheight="64" infinite="0" nextlayerid="6" nextobjectid="1">
  <tileset firstgid="1" name="world" tilewidth="64" tileheight="64" spacing="32" margin="32" tilecount="126" columns="18">
   <image source="../images/world.png" width="1760" height="704"/>
  </tileset>
- <layer id="5" name="Tile Layer 1" width="40" height="40">
+ <layer id="5" name="Tile Layer 1" width="80" height="80">
   <data encoding="base64" compression="zlib">
-   eJzt2TEKACAMwMDS/z9aHHyADdQiCbg5nIN2MCMih69p6WPp4+lj6WNN9+30sfTV837w9LH0sfSx9LH01Zs+f298L87wk+/s704fSx/r9v3rNupjVeZbp7Hjb4CuBUQ2AXM=
+   eJzt1zFqA0EUREGh+x/a0T+A3AI/L1Uw2QRvO1nm/Xq93uFTV2y038Z+G/tt7Lez38Z+G/tt7Lex367cdsqN5bZTbiy3nXJjue1UG/0/duW2U24st51yY7ntlBvLbafcWG475cZy2yk3lttOubHcdsqN5bZTbiy3nXJjue1UG71/N0/a7y++w36bJ+33yb1vst/Gfhv7bey3edJ+n979Bvtt7Ld52n6/ub/4L/uVDwAAAAAAAAAAAAAAACx+AHqLAXM=
   </data>
  </layer>
 </map>

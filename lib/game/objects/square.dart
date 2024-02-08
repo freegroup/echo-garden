@@ -1,14 +1,14 @@
 import 'dart:ui';
 
+import 'package:echo_garden/game/constant.dart';
 import 'package:flame/components.dart';
 
 class ColoredSquare extends PositionComponent {
   ColoredSquare(Vector2 position, [this.color = const Color(0xFF000000)])
       : super(
-          anchor: Anchor.center,
+          anchor: Anchor.topLeft,
           position: position,
-          priority: 100,
-          size: Vector2.all(64),
+          size: Vector2.all(worldTileSize),
         );
 
   factory ColoredSquare.red(Vector2 position) => ColoredSquare(
@@ -32,7 +32,9 @@ class ColoredSquare extends PositionComponent {
   void onLoad() {
     add(
       RectangleComponent(
-        paint: Paint()..color = color,
+        paint: Paint()
+          ..color = color
+          ..isAntiAlias = false,
         size: size,
       ),
     );

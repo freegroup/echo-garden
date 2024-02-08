@@ -3,6 +3,13 @@ import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
+// Define an extension on Rect
+extension RectExtension on Rect {
+  bool containsVector2(Vector2 vector) {
+    return contains(Offset(vector.x, vector.y));
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Flame.device.setLandscape();

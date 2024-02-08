@@ -19,6 +19,7 @@ class EchoGardenGame extends FlameGame with HasKeyboardHandlerComponents {
     await images.loadAll([
       'block.png',
       'ember.png',
+      'world.png',
     ]);
 
     addAll([cameraComponent, world]);

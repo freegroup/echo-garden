@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:echo_garden/game/constant.dart';
 import 'package:echo_garden/game/game.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/services.dart';
@@ -8,7 +11,7 @@ class EmberPlayer extends SpriteAnimationComponent
   final double runSpeed = 250.0;
   EmberPlayer({
     required super.position,
-  }) : super(size: Vector2.all(64), anchor: Anchor.center) {
+  }) : super(size: Vector2.all(worldTileSize), anchor: Anchor.center) {
     velocity = Vector2(0, 0);
   }
 
@@ -42,6 +45,21 @@ class EmberPlayer extends SpriteAnimationComponent
       position.x = 0;
     }
     */
+    //print((position / worldTileSize)..floor());
+    double alignment = 5;
+    Vector2 cellPlayer = (position / worldTileSize)..floor();
+    // Calculate the aligned starting points
+    double alignedStartX = max(0, (cellPlayer.x - worldLoadedRadius ~/ 2) ~/ alignment * alignment);
+    double alignedStartY = max(0, (cellPlayer.y - worldLoadedRadius ~/ 2) ~/ alignment * alignment);
+
+    Rect cellsAroundPlayer = Rect.fromLTWH(
+      alignedStartX,
+      alignedStartY,
+      worldLoadedRadius,
+      worldLoadedRadius,
+    );
+    // center the rect around the player
+    game.world.cellsToShow = cellsAroundPlayer;
     super.update(dt);
   }
 

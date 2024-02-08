@@ -5,8 +5,8 @@
     },
     "activeFile": "assets/tiles/world.tmx",
     "expandedProjectPaths": [
-        ".",
         "assets/tiles",
+        ".",
         "assets"
     ],
     "fileStates": {
@@ -14,11 +14,11 @@
             "scaleInEditor": 1
         },
         "assets/tiles/world.tmx": {
-            "scale": 0.33,
+            "scale": 0.125,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 2372.727272727273,
-                "y": 925.7575757575756
+                "x": 3032,
+                "y": 2468
             }
         },
         "assets/tiles/world.tmx#Overworld": {
