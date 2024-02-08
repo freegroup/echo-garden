@@ -12,6 +12,7 @@ class TileSquare extends AgentVisualization with HasGameReference<GameVisualizat
   late final Sprite sprite;
 
   TileSquare({
+    required super.agentModel,
     required this.spritePosition,
     super.anchor = Anchor.topLeft,
     required super.position,

@@ -1,6 +1,8 @@
 import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
+import 'package:echo_garden/game/agent.dart';
+import 'package:echo_garden/game/objects/tree.dart';
 
 import 'package:echo_garden/model/agent.dart';
 import 'package:echo_garden/model/objects/patch.dart';
@@ -16,6 +18,11 @@ class TreeModel extends PlantModel {
   TreeModel({required super.scheduler, super.x, super.y, super.cell}) {
     strategy = MovementStrategy(model: scheduler.gameModelRef);
     energy = kGameConfiguration.plant.tree.initialEnergy;
+  }
+
+  @override
+  AgentVisualization createVisualization() {
+    return TreeTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
   }
 
   @override

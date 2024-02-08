@@ -1,4 +1,6 @@
+import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/agent.dart';
+import 'package:echo_garden/game/objects/square.dart';
 import 'package:echo_garden/model/game.dart';
 import 'package:echo_garden/model/scheduler/base.dart';
 import 'package:flame/components.dart';
@@ -21,6 +23,10 @@ class AgentModel {
   GameModel get gameModelRef => scheduler.gameModelRef;
 
   String get layerId => AgentModel.staticLayerId;
+
+  AgentVisualization createVisualization() {
+    return ColoredSquare.red(this, cell * kGameConfiguration.world.tileSize);
+  }
 
   void preStep() {}
 

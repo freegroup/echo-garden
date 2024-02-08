@@ -15,6 +15,7 @@ class GameVisualization extends FlameGame with HasKeyboardHandlerComponents {
   GameVisualization({required GameModel gameModel})
       : world = WorldVisualization(gameModel: gameModel) {
     cameraComponent = CameraComponent(world: world);
+    gameModel.gameVisualization = this;
   }
 
   @override

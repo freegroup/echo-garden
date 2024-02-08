@@ -19,7 +19,9 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   late EmberPlayer _player;
   late Vector2 _canvasSize;
   late Vector2 _modelSize;
-  final Map<Vector2, PositionComponent> _squareComponents = {};
+  final Map<Vector2, AgentVisualization> _squareComponents = {};
+  double _elapsedTime = 0.0;
+  final double _updateInterval = 0.3; // 100 milliseconds
 
   Rect _cellToShow = const Rect.fromLTWH(0, 0, 0, 0);
   late Map<String, TileLayer> _layersMap;
@@ -32,6 +34,16 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
       PlantModel.staticLayerId: TileLayer(priority: 1),
       ActorModel.staticLayerId: TileLayer(priority: 2),
     };
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _elapsedTime += dt;
+    if (_elapsedTime >= _updateInterval) {
+      gameModel.step();
+      _elapsedTime -= _updateInterval;
+    }
   }
 
   set cellsToShow(Rect cells) {
@@ -47,7 +59,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     _squareComponents.removeWhere((cell, square) {
       final shouldRemove = !_cellToShow.containsVector2(cell);
       if (shouldRemove) {
-        _layersMap.forEach((key, layer) => layer.remove(square));
+        _layersMap[square.agentModel.layerId]!.remove(square);
       }
       return shouldRemove;
     });
@@ -72,7 +84,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
         // Check if there's an agent at this cell and if it's not already represented by a component
         final agent = gameModel.getLayer(PatchModel.staticLayerId).get(cell);
         if (agent != null && !_squareComponents.containsKey(cell)) {
-          late PositionComponent newComponent = _createComponentByModel(agent);
+          AgentVisualization newComponent = agent.createVisualization();
           _layersMap[agent.layerId]!.add(newComponent);
           _squareComponents[cell] = newComponent;
         }
@@ -121,7 +133,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   void onModelAdded(AgentModel agent) {
     // check if the agent in the visible area an add them if yes
     if (_cellToShow.containsVector2(agent.cell)) {
-      var component = _createComponentByModel(agent);
+      var component = agent.createVisualization();
       _layersMap[agent.layerId]!.add(component);
       _squareComponents[agent.cell] = component;
     }
@@ -130,11 +142,4 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   void onModelRemoved(AgentModel agent) {}
 
   void onModelMoved(AgentModel agent) {}
-
-  AgentVisualization _createComponentByModel(AgentModel agent) {
-    if (agent is WaterModel) {
-      return WaterTile(position: agent.cell * kGameConfiguration.world.tileSize);
-    }
-    return GrassTile(position: agent.cell * kGameConfiguration.world.tileSize);
-  }
 }

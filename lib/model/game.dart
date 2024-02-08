@@ -149,10 +149,10 @@ class GameModel {
       }
     }
 
-    placePlants(totalGrass, (cell) => GrassModel(scheduler: _patchScheduler, cell: cell));
-    placePlants(totalWeed, (cell) => WeedModel(scheduler: _patchScheduler, cell: cell));
-    placePlants(totalFlower, (cell) => FlowerModel(scheduler: _patchScheduler, cell: cell));
-    placePlants(totalTree, (cell) => TreeModel(scheduler: _patchScheduler, cell: cell));
+    placePlants(totalGrass, (cell) => add(GrassModel(scheduler: _patchScheduler, cell: cell)));
+    placePlants(totalWeed, (cell) => add(WeedModel(scheduler: _patchScheduler, cell: cell)));
+    placePlants(totalFlower, (cell) => add(FlowerModel(scheduler: _patchScheduler, cell: cell)));
+    placePlants(totalTree, (cell) => add(TreeModel(scheduler: _patchScheduler, cell: cell)));
 
     // Stop the stopwatch
     stopwatch.stop();
