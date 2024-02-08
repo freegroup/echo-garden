@@ -1,12 +1,14 @@
 import 'dart:ui';
 
-import 'package:echo_garden/game/constant.dart';
+import 'package:echo_garden/configuration.dart';
+import 'package:echo_garden/game/agent.dart';
+
 import 'package:echo_garden/game/game.dart';
 import 'package:flame/components.dart';
 
-class TileSquare extends PositionComponent with HasGameReference<EchoGardenGame> {
+class TileSquare extends AgentVisualization with HasGameReference<GameVisualization> {
   final Vector2 spritePosition;
-  static Vector2 spriteSize = Vector2.all(tileMapSpriteSize);
+  static Vector2 spriteSize = Vector2.all(kGameConfiguration.world.tileSize);
   late final Sprite sprite;
 
   TileSquare({
@@ -14,7 +16,7 @@ class TileSquare extends PositionComponent with HasGameReference<EchoGardenGame>
     super.anchor = Anchor.topLeft,
     required super.position,
   }) : super(
-          size: Vector2.all(worldTileSize),
+          size: Vector2.all(kGameConfiguration.world.tileSize),
         );
 
   @override
@@ -28,7 +30,7 @@ class TileSquare extends PositionComponent with HasGameReference<EchoGardenGame>
     await super.onLoad();
 
     sprite = Sprite(
-      game.images.fromCache(tileMapImage),
+      game.images.fromCache(kGameConfiguration.tileMap.tilemap),
       srcPosition: spritePosition,
       srcSize: spriteSize,
     );

@@ -12,17 +12,17 @@ class BaseScheduler {
   int steps = 0;
 
   // The model instance associated with the scheduler.
-  final GameModel gameRef;
+  final GameModel gameModelRef;
 
   // the agents to manage
   late Set<AgentModel> agents = <AgentModel>{};
 
-  BaseScheduler({required this.gameRef});
+  BaseScheduler({required this.gameModelRef});
 
   void add(AgentModel agent) {
     if (!agents.contains(agent)) {
       agents.add(agent);
-      gameRef.add(agent);
+      gameModelRef.add(agent);
     } else {
       print("is already member of the Scheduler: $agent");
     }

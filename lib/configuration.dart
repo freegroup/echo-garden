@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 
-const kConfiguration = (
-  world:(
-    width: 50,
-    height: 100,
+const kGameConfiguration = (
+  tileMap: (
+    width: 1000.0,
+    height: 500.0,
+    tilemap: "world.png",
+    tileSpriteSize: 64,
+  ),
+  world: (
+    tileSize: 64.0,
+    visibleTileRadius: 40.0,
   ),
   rabbit: (
     birthThreshold: 50.0,

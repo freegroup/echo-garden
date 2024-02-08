@@ -17,6 +17,7 @@ import 'package:echo_garden/model/terraformer/diamond_square.dart';
 import 'package:flame/game.dart';
 
 class GameModel {
+
   late final Vector2 _size;
   late final BaseScheduler _rabbitScheduler;
   late final BaseScheduler _patchScheduler;
@@ -34,8 +35,8 @@ class GameModel {
       ActorModel.staticTypeId: Layer(_size),
     };
 
-    _rabbitScheduler = BaseScheduler(gameRef: this);
-    _patchScheduler = BaseScheduler(gameRef: this);
+    _rabbitScheduler = BaseScheduler(gameModelRef: this);
+    _patchScheduler = BaseScheduler(gameModelRef: this);
 
     var heightMap = diamondSquare(_size);
 
@@ -113,10 +114,10 @@ class GameModel {
 
     // Define the total number of agents to place for each type
     int area = width * height;
-    int totalGrass = (area * kConfiguration.plant.grass.growPercentage).toInt();
-    int totalWeed = (area * kConfiguration.plant.weed.growPercentage).toInt();
-    int totalFlower = (area * kConfiguration.plant.flower.growPercentage).toInt();
-    int totalTree = (area * kConfiguration.plant.tree.growPercentage).toInt();
+    int totalGrass = (area * kGameConfiguration.plant.grass.growPercentage).toInt();
+    int totalWeed = (area * kGameConfiguration.plant.weed.growPercentage).toInt();
+    int totalFlower = (area * kGameConfiguration.plant.flower.growPercentage).toInt();
+    int totalTree = (area * kGameConfiguration.plant.tree.growPercentage).toInt();
 
     void placePlants(int total, Function(Vector2) placeFunction, {int radius = 1}) {
       final random = Random();

@@ -1,4 +1,6 @@
+import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/game.dart';
+import 'package:echo_garden/model/index.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
@@ -15,14 +17,16 @@ Future<void> main() async {
   await Flame.device.setLandscape();
   await Flame.device.fullScreen();
 
-  final game = EchoGardenGame();
+  GameModel gameModel =
+      GameModel(Vector2(kGameConfiguration.tileMap.width, kGameConfiguration.tileMap.height));
+  final game = GameVisualization(gameModel: gameModel);
   runApp(EchoGardenApp(game: game));
 }
 
 class EchoGardenApp extends StatelessWidget {
   const EchoGardenApp({super.key, required this.game});
 
-  final EchoGardenGame game;
+  final GameVisualization game;
 
   @override
   Widget build(BuildContext context) {

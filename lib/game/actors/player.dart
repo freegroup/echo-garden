@@ -1,17 +1,17 @@
 import 'dart:math';
 
-import 'package:echo_garden/game/constant.dart';
+import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/game.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/services.dart';
 
 class EmberPlayer extends SpriteAnimationComponent
-    with HasGameReference<EchoGardenGame>, KeyboardHandler {
+    with HasGameReference<GameVisualization>, KeyboardHandler {
   late final Vector2 velocity;
   final double runSpeed = 250.0;
   EmberPlayer({
     required super.position,
-  }) : super(size: Vector2.all(worldTileSize), anchor: Anchor.center) {
+  }) : super(size: Vector2.all(kGameConfiguration.world.tileSize), anchor: Anchor.center) {
     velocity = Vector2(0, 0);
   }
 
@@ -47,16 +47,18 @@ class EmberPlayer extends SpriteAnimationComponent
     */
     //print((position / worldTileSize)..floor());
     double alignment = 5;
-    Vector2 cellPlayer = (position / worldTileSize)..floor();
+    Vector2 cellPlayer = (position / kGameConfiguration.world.tileSize)..floor();
     // Calculate the aligned starting points
-    double alignedStartX = max(0, (cellPlayer.x - worldLoadedRadius ~/ 2) ~/ alignment * alignment);
-    double alignedStartY = max(0, (cellPlayer.y - worldLoadedRadius ~/ 2) ~/ alignment * alignment);
+    double alignedStartX = max(0,
+        (cellPlayer.x - kGameConfiguration.world.visibleTileRadius ~/ 2) ~/ alignment * alignment);
+    double alignedStartY = max(0,
+        (cellPlayer.y - kGameConfiguration.world.visibleTileRadius ~/ 2) ~/ alignment * alignment);
 
     Rect cellsAroundPlayer = Rect.fromLTWH(
       alignedStartX,
       alignedStartY,
-      worldLoadedRadius,
-      worldLoadedRadius,
+      kGameConfiguration.world.visibleTileRadius,
+      kGameConfiguration.world.visibleTileRadius,
     );
     // center the rect around the player
     game.world.cellsToShow = cellsAroundPlayer;

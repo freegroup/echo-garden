@@ -1,13 +1,10 @@
-
 import 'package:echo_garden/model/game.dart';
 import 'package:flame/components.dart';
 
 class MovementStrategy {
   final GameModel model;
 
-  MovementStrategy({required this.model}) {
-    //
-  }
+  MovementStrategy({required this.model});
 
   Set<Vector2> getNeighborhood({
     required Vector2 cell,

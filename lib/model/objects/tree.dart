@@ -14,8 +14,8 @@ class TreeModel extends PlantModel {
   late final MovementStrategy strategy;
 
   TreeModel({required super.scheduler, super.x, super.y, super.cell}) {
-    strategy = MovementStrategy(model: scheduler.gameRef);
-    energy = kConfiguration.plant.tree.initialEnergy;
+    strategy = MovementStrategy(model: scheduler.gameModelRef);
+    energy = kGameConfiguration.plant.tree.initialEnergy;
   }
 
   @override
@@ -26,23 +26,23 @@ class TreeModel extends PlantModel {
 
   _grow() {
     energy = min(
-      kConfiguration.plant.tree.maxEnergy,
-      energy + kConfiguration.plant.tree.growEnergy,
+      kGameConfiguration.plant.tree.maxEnergy,
+      energy + kGameConfiguration.plant.tree.growEnergy,
     );
   }
 
   _seed() {
     var percentage = Random().nextInt(100).toDouble() / 100;
-    if (percentage > kConfiguration.plant.tree.seedPercentage) {
+    if (percentage > kGameConfiguration.plant.tree.seedPercentage) {
       return;
     }
 
-    if (energy >= kConfiguration.plant.tree.seedEnergy) {
+    if (energy >= kGameConfiguration.plant.tree.seedEnergy) {
       var cells = strategy.getNeighborhood(cell: cell, layerTypeId: PlantModel.staticTypeId);
       Vector2? cellCandidate = pickRandomElement(cells);
       if (cellCandidate != null) {
-        AgentModel? patch = gameRef.getAgentAtCell(cellCandidate, PatchModel.staticTypeId);
-        AgentModel? plant = gameRef.getAgentAtCell(cellCandidate, PlantModel.staticTypeId);
+        AgentModel? patch = gameModelRef.getAgentAtCell(cellCandidate, PatchModel.staticTypeId);
+        AgentModel? plant = gameModelRef.getAgentAtCell(cellCandidate, PlantModel.staticTypeId);
         if (patch is SeedableModel && plant is! TreeModel) {
           TreeModel(scheduler: scheduler, cell: cellCandidate);
           plant?.die();

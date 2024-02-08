@@ -3,7 +3,7 @@ import 'package:echo_garden/model/objects/plant.dart';
 
 class WeedModel extends PlantModel {
   WeedModel({required super.scheduler, super.x, super.y, super.cell}) {
-    energy = kConfiguration.plant.weed.initialEnergy;
+    energy = kGameConfiguration.plant.weed.initialEnergy;
   }
 
   @override

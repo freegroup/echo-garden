@@ -1,23 +1,24 @@
 import 'package:echo_garden/game/world.dart';
+import 'package:echo_garden/model/game.dart';
 import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 
-class EchoGardenGame extends FlameGame with HasKeyboardHandlerComponents {
+class GameVisualization extends FlameGame with HasKeyboardHandlerComponents {
   late final CameraComponent cameraComponent;
 
   @override
-  final EchoGardenWorld world = EchoGardenWorld();
+  final WorldVisualization world;
 
-  EchoGardenGame() {
+  GameVisualization({required GameModel gameModel})
+      : world = WorldVisualization(gameModel: gameModel) {
     cameraComponent = CameraComponent(world: world);
   }
 
   @override
   Future<void> onLoad() async {
     await images.loadAll([
-      'block.png',
       'ember.png',
       'world.png',
     ]);

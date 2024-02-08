@@ -4,7 +4,7 @@ import 'package:echo_garden/model/agent.dart';
 import 'package:echo_garden/model/scheduler/base.dart';
 
 class RandomScheduler extends BaseScheduler {
-  RandomScheduler({required super.gameRef});
+  RandomScheduler({required super.gameModelRef});
 
   @override
   void step() {

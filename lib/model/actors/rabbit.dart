@@ -10,13 +10,13 @@ import 'package:flame/components.dart';
 
 class RabbitAgent extends ActorModel {
   double energy = 1;
-  double birthThreshold = kConfiguration.rabbit.birthThreshold;
+  double birthThreshold = kGameConfiguration.rabbit.birthThreshold;
 
   late final MovementStrategy strategy;
 
   RabbitAgent({required super.scheduler, super.x, super.y, super.cell}) {
-    strategy = MovementStrategy(model: scheduler.gameRef);
-    energy = Random().nextInt(kConfiguration.rabbit.initEnergy).toDouble();
+    strategy = MovementStrategy(model: scheduler.gameModelRef);
+    energy = Random().nextInt(kGameConfiguration.rabbit.initEnergy).toDouble();
   }
 
   @override
@@ -24,7 +24,7 @@ class RabbitAgent extends ActorModel {
     _move();
     _eat();
     _reproduce();
-    energy = energy + kConfiguration.rabbit.energyPerStep;
+    energy = energy + kGameConfiguration.rabbit.energyPerStep;
     if (energy < 0) {
       die();
     }
@@ -38,14 +38,14 @@ class RabbitAgent extends ActorModel {
     );
     Vector2? newCell = pickRandomElement(possibleMoves);
     if (newCell != null) {
-      gameRef.move(this, newCell);
+      gameModelRef.move(this, newCell);
     }
   }
 
   void _eat() {
-    AgentModel? patch = gameRef.getAgentAtCell(cell, PlantModel.staticTypeId);
+    AgentModel? patch = gameModelRef.getAgentAtCell(cell, PlantModel.staticTypeId);
     if (patch != null && patch is PlantModel) {
-      if (patch.energy < kConfiguration.rabbit.maxEnergyCanEat) {
+      if (patch.energy < kGameConfiguration.rabbit.maxEnergyCanEat) {
         energy = energy + patch.energy;
         patch.die();
       }

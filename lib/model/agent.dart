@@ -1,3 +1,4 @@
+import 'package:echo_garden/game/agent.dart';
 import 'package:echo_garden/model/game.dart';
 import 'package:echo_garden/model/scheduler/base.dart';
 import 'package:flame/components.dart';
@@ -6,6 +7,7 @@ class AgentModel {
   static String staticTypeId = "AgentModel";
   late Vector2 cell;
   final BaseScheduler scheduler;
+  AgentVisualization? visualization;
 
   AgentModel({required this.scheduler, x = 0, y = 0, cell}) {
     if (cell != null) {
@@ -16,7 +18,7 @@ class AgentModel {
     scheduler.add(this);
   }
 
-  GameModel get gameRef => scheduler.gameRef;
+  GameModel get gameModelRef => scheduler.gameModelRef;
 
   String get typeId => AgentModel.staticTypeId;
 
@@ -27,6 +29,6 @@ class AgentModel {
   void postStep() {}
 
   void die() {
-    gameRef.remove(this);
+    gameModelRef.remove(this);
   }
 }
