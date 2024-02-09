@@ -44,9 +44,9 @@ class GameModel {
     for (double x = 0; x < width; x++) {
       for (double y = 0; y < height; y++) {
         if (heightMap[x.toInt()][y.toInt()] < waterThreshold) {
-          WaterModel(scheduler: _patchScheduler, cell: Vector2(x, y));
+          add(WaterModel(scheduler: _patchScheduler, cell: Vector2(x, y)));
         } else {
-          SoilModel(scheduler: _patchScheduler, cell: Vector2(x, y));
+          add(SoilModel(scheduler: _patchScheduler, cell: Vector2(x, y)));
         }
       }
     }
@@ -60,7 +60,7 @@ class GameModel {
       // do not place rabbits on the water....
       if (landmark != null) {
         print("add rabbit");
-        RabbitAgent(scheduler: _rabbitScheduler, x: x, y: y);
+        add(RabbitAgent(scheduler: _rabbitScheduler, x: x, y: y));
       }
     }
   }
@@ -74,8 +74,6 @@ class GameModel {
   void remove(AgentModel agent) {
     var layer = layersMap[agent.layerId]!;
     layer.removeAgent(agent);
-    _rabbitScheduler.remove(agent);
-    _patchScheduler.remove(agent);
     gameVisualization?.onModelRemoved(agent);
   }
 
@@ -149,10 +147,10 @@ class GameModel {
       }
     }
 
-    placePlants(totalGrass, (cell) => GrassModel(scheduler: _patchScheduler, cell: cell));
-    placePlants(totalWeed, (cell) => WeedModel(scheduler: _patchScheduler, cell: cell));
-    placePlants(totalFlower, (cell) => FlowerModel(scheduler: _patchScheduler, cell: cell));
-    placePlants(totalTree, (cell) => TreeModel(scheduler: _patchScheduler, cell: cell));
+    placePlants(totalGrass, (cell) => add(GrassModel(scheduler: _patchScheduler, cell: cell)));
+    placePlants(totalWeed, (cell) => add(WeedModel(scheduler: _patchScheduler, cell: cell)));
+    placePlants(totalFlower, (cell) => add(FlowerModel(scheduler: _patchScheduler, cell: cell)));
+    placePlants(totalTree, (cell) => add(TreeModel(scheduler: _patchScheduler, cell: cell)));
 
     // Stop the stopwatch
     stopwatch.stop();

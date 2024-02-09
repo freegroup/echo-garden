@@ -10,10 +10,10 @@ const kGameConfiguration = (
     tileSnap: 3.0,
   ),
   rabbit: (
-    birthThreshold: 50.0,
-    initEnergy: 10,
-    energyPerStep: -0.2,
-    maxEnergyPerEat: 0.5,
+    birthThreshold: 15.0,
+    initEnergy: 5,
+    energyPerStep: -0.1,
+    maxEnergyPerEat: 0.2,
     maxEnergyCanEat: 25,
   ),
   plant: (

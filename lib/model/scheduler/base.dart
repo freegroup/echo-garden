@@ -22,7 +22,7 @@ class BaseScheduler {
   void add(AgentModel agent) {
     if (!agents.contains(agent)) {
       agents.add(agent);
-      gameModelRef.add(agent);
+      //gameModelRef.add(agent);
     } else {
       print("is already member of the Scheduler: $agent");
     }

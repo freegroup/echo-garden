@@ -11,13 +11,6 @@ class AgentModel {
   final BaseScheduler scheduler;
   AgentVisualization? _visualization;
 
-  AgentVisualization? get visualization => _visualization;
-
-  set visualization(AgentVisualization? value) {
-    _visualization = value;
-    _visualization?.onModelChange();
-  }
-
   AgentModel({required this.scheduler, double x = 0.0, double y = 0.0, cell}) {
     if (cell != null) {
       this.cell = cell;
@@ -29,6 +22,11 @@ class AgentModel {
 
   GameModel get gameModelRef => scheduler.gameModelRef;
   String get layerId => AgentModel.staticLayerId;
+  AgentVisualization? get visualization => _visualization;
+  set visualization(AgentVisualization? value) {
+    _visualization = value;
+    _visualization?.onModelChange();
+  }
 
   AgentVisualization createVisualization() {
     return ColoredSquare.red(this, cell * kGameConfiguration.world.tileSize);
@@ -41,6 +39,7 @@ class AgentModel {
   void postStep() {}
 
   void die() {
+    scheduler.remove(this);
     gameModelRef.remove(this);
   }
 }

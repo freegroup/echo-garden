@@ -3,10 +3,7 @@ import 'dart:math';
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/agent.dart';
 import 'package:echo_garden/game/objects/rabbit.dart';
-import 'package:echo_garden/model/actors/actor.dart';
-import 'package:echo_garden/model/agent.dart';
 import 'package:echo_garden/model/index.dart';
-import 'package:echo_garden/model/objects/plant.dart';
 import 'package:echo_garden/model/strategy/base.dart';
 import 'package:echo_garden/utils/random.dart';
 import 'package:flame/components.dart';
@@ -17,9 +14,9 @@ class RabbitAgent extends ActorModel {
 
   late final MovementStrategy strategy;
 
-  RabbitAgent({required super.scheduler, super.x, super.y, super.cell}) {
+  RabbitAgent({required super.scheduler, super.x, super.y, super.cell, energy}) {
     strategy = MovementStrategy(model: scheduler.gameModelRef);
-    energy = Random().nextInt(kGameConfiguration.rabbit.initEnergy).toDouble();
+    this.energy = energy ?? Random().nextInt(kGameConfiguration.rabbit.initEnergy).toDouble();
   }
 
   @override
@@ -76,10 +73,9 @@ class RabbitAgent extends ActorModel {
 
   bool _reproduce() {
     if (energy > birthThreshold) {
-      energy = energy / 2;
-      RabbitAgent child = RabbitAgent(scheduler: scheduler);
-      child.cell = cell;
-      child.energy = energy;
+      energy /= 2;
+      print("reproduce");
+      gameModelRef.add(RabbitAgent(scheduler: scheduler, cell: cell, energy: energy));
       return true;
     }
     return false;
