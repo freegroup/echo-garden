@@ -9,11 +9,11 @@ import 'package:flame/components.dart';
 class TileSquare extends AgentVisualization with HasGameReference<GameVisualization> {
   static final Vector2 spriteSize = Vector2.all(kGameConfiguration.tileMap.tileSpriteSize);
   late final Sprite sprite;
-  SpriteComponent? spriteComponent;
+  late final SpriteComponent spriteComponent;
 
   final List<String> spriteFilenames; // List of sprite filenames
 
-  static final Paint _paint = Paint()..isAntiAlias = false;
+  final Paint _paint = Paint()..isAntiAlias = false;
 
   TileSquare({
     required super.agentModel,
@@ -37,8 +37,6 @@ class TileSquare extends AgentVisualization with HasGameReference<GameVisualizat
     // Load the sprite using the selected filename
     sprite = await Sprite.load(selectedFilename);
     spriteComponent = SpriteComponent(sprite: sprite, size: size, paint: _paint);
-    //spriteComponent.setOpacity(0.1);
-    // Create and add the SpriteComponent
-    add(spriteComponent!);
+    add(spriteComponent);
   }
 }

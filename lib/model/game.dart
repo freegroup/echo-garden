@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/game.dart';
+import 'package:echo_garden/model/actors/rabbit.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/scheduler/base.dart';
 import 'package:echo_garden/model/terraformer/diamond_square.dart';
@@ -48,13 +49,24 @@ class GameModel {
         }
       }
     }
+
+    var numRabbits = 2000;
+    var random = Random();
+    for (int i = 0; i < numRabbits; i++) {
+      double x = random.nextInt(width).toDouble();
+      double y = random.nextInt(height).toDouble();
+      AgentModel? landmark = getAgentAtCell(Vector2(x, y), SeedableModel.staticLayerId);
+      // do not place rabbits on the water....
+      if (landmark != null) {
+        print("add rabbit");
+        RabbitAgent(scheduler: _rabbitScheduler, x: x, y: y);
+      }
+    }
   }
 
-  void add(AgentModel agent) {
+  Future<void> add(AgentModel agent) async {
     var layer = layersMap[agent.layerId]!;
     layer.add(agent.cell, agent);
-    print("GameModel.add: ${agent.runtimeType} ${agent.cell}");
-
     gameVisualization?.onModelAdded(agent);
   }
 
@@ -69,6 +81,7 @@ class GameModel {
   void move(AgentModel agent, Vector2 newCell) {
     var layer = layersMap[agent.layerId]!;
     layer.move(agent, newCell);
+    agent.cell = newCell;
     gameVisualization?.onModelMoved(agent);
   }
 

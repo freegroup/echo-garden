@@ -1,15 +1,12 @@
-import 'package:flutter/material.dart';
-
 const kGameConfiguration = (
   tileMap: (
     width: 100.0,
     height: 100.0,
-    tilemap: "world.png",
     tileSpriteSize: 63.0,
   ),
   world: (
     tileSize: 64.0,
-    visibleTileRadius: 10.0,
+    visibleTileRadius: 30.0,
     tileSnap: 3.0,
   ),
   rabbit: (
@@ -18,7 +15,6 @@ const kGameConfiguration = (
     energyPerStep: -1.05,
     maxEnergyCanEat: 25,
   ),
-  patch: (water: (color: Colors.blue,),),
   plant: (
     weed: (
       initialEnergy: 0.5,
@@ -27,12 +23,14 @@ const kGameConfiguration = (
     grass: (
       initialEnergy: 0.2,
       maxEnergy: 1.5,
-      incEnergie: 0.1,
-      growPercentage: 0.035,
+      incEnergie: 0.3,
+      growPercentage: 0.055,
     ),
     flower: (
-      initialEnergy: 3.5,
-      growPercentage: 0.0005,
+      initialEnergy: 0.5,
+      maxEnergy: 3.5,
+      incEnergie: 0.3,
+      growPercentage: 0.001,
     ),
     tree: (
       initialEnergy: 0.5,
@@ -40,7 +38,7 @@ const kGameConfiguration = (
       maxEnergy: 100.0,
       seedEnergy: 9.0,
       seedPercentage: 0.1,
-      growPercentage: 0.0003,
+      growPercentage: 0.0006,
     ),
   )
 );

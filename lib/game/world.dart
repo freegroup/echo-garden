@@ -99,7 +99,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
 
         // Fill up all visualization layers with the corresponding Model representation
         //
-        _layersMap.forEach((layerId, visualizationLayer) {
+        _layersMap.forEach((layerId, visualizationLayer) async {
           // Get the model for the layer at the cell
           //
           final agentModel = gameModel.getLayer(layerId).get(cell);
@@ -107,9 +107,9 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
           //
           if (agentModel != null && !_visibleModels.contains(agentModel)) {
             AgentVisualization agentVisualization = agentModel.createVisualization();
-            visualizationLayer.add(agentVisualization);
-            _visibleModels.add(agentModel);
+            await visualizationLayer.add(agentVisualization);
             agentModel.visualization = agentVisualization;
+            _visibleModels.add(agentModel);
           }
         });
       }
@@ -154,17 +154,27 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     );
   }
 
-  void onModelAdded(AgentModel agent) {
+  Future<void> onModelAdded(AgentModel agent) async {
     // check if the agent in the visible area an add them if yes
     if (_cellToShow.containsVector2(agent.cell)) {
       var component = agent.createVisualization();
-      _layersMap[agent.layerId]!.add(component);
+      await _layersMap[agent.layerId]!.add(component);
       _visibleModels.add(agent);
       agent.visualization = component;
     }
   }
 
-  void onModelRemoved(AgentModel agent) {}
+  void onModelRemoved(AgentModel agent) async {
+    // check if the agent in the visible area an add them if yes
+    if (_cellToShow.containsVector2(agent.cell)) {
+      AgentVisualization? component = agent.visualization;
+      if (component != null) {
+        _layersMap[agent.layerId]?.remove(component);
+        _visibleModels.remove(agent);
+        agent.visualization = null;
+      }
+    }
+  }
 
   void onModelMoved(AgentModel agent) {}
 }

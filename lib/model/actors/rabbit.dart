@@ -1,6 +1,8 @@
 import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
+import 'package:echo_garden/game/agent.dart';
+import 'package:echo_garden/game/objects/rabbit.dart';
 import 'package:echo_garden/model/actors/actor.dart';
 import 'package:echo_garden/model/agent.dart';
 import 'package:echo_garden/model/objects/plant.dart';
@@ -20,17 +22,25 @@ class RabbitAgent extends ActorModel {
   }
 
   @override
+  AgentVisualization createVisualization() {
+    return RabbitTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
+  }
+
+  @override
   void step() {
-    _move();
-    _eat();
-    _reproduce();
+    bool changed = false;
+    changed |= _move();
+    changed |= _eat();
+    changed |= _reproduce();
     energy = energy + kGameConfiguration.rabbit.energyPerStep;
     if (energy < 0) {
       die();
+      changed = true;
     }
+    if (changed) visualization?.onModelChange();
   }
 
-  void _move() {
+  bool _move() {
     Set<Vector2> possibleMoves = strategy.getNeighborhood(
       includeCenter: false,
       cell: cell,
@@ -39,25 +49,31 @@ class RabbitAgent extends ActorModel {
     Vector2? newCell = pickRandomElement(possibleMoves);
     if (newCell != null) {
       gameModelRef.move(this, newCell);
+      return true;
     }
+    return false;
   }
 
-  void _eat() {
+  bool _eat() {
     AgentModel? patch = gameModelRef.getAgentAtCell(cell, PlantModel.staticLayerId);
     if (patch != null && patch is PlantModel) {
       if (patch.energy < kGameConfiguration.rabbit.maxEnergyCanEat) {
         energy = energy + patch.energy;
         patch.die();
+        return true;
       }
     }
+    return false;
   }
 
-  void _reproduce() {
+  bool _reproduce() {
     if (energy > birthThreshold) {
       energy = energy / 2;
       RabbitAgent child = RabbitAgent(scheduler: scheduler);
       child.cell = cell;
       child.energy = energy;
+      return true;
     }
+    return false;
   }
 }

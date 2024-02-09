@@ -22,6 +22,7 @@ class GameVisualization extends FlameGame with HasKeyboardHandlerComponents {
   Future<void> onLoad() async {
     await images.loadAll([
       'ember.png',
+      'rabbit-01.png',
       'beach-01.png',
       'beach-02.png',
       'fir-01.png',
@@ -45,8 +46,8 @@ class GameVisualization extends FlameGame with HasKeyboardHandlerComponents {
     addAll([cameraComponent, world]);
   }
 
-  void onModelAdded(AgentModel agent) {
-    world.onModelAdded(agent);
+  void onModelAdded(AgentModel agent) async {
+    await world.onModelAdded(agent);
   }
 
   void onModelRemoved(AgentModel agent) {

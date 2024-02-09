@@ -9,7 +9,14 @@ class AgentModel {
   static String staticLayerId = "AgentModel";
   late Vector2 cell;
   final BaseScheduler scheduler;
-  AgentVisualization? visualization;
+  AgentVisualization? _visualization;
+
+  AgentVisualization? get visualization => _visualization;
+
+  set visualization(AgentVisualization? value) {
+    _visualization = value;
+    _visualization?.onModelChange();
+  }
 
   AgentModel({required this.scheduler, x = 0, y = 0, cell}) {
     if (cell != null) {
@@ -21,7 +28,6 @@ class AgentModel {
   }
 
   GameModel get gameModelRef => scheduler.gameModelRef;
-
   String get layerId => AgentModel.staticLayerId;
 
   AgentVisualization createVisualization() {

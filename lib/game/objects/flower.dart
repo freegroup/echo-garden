@@ -3,9 +3,9 @@ import 'package:echo_garden/game/objects/tile.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:flame/components.dart';
 
-class GrassTile extends TileSquare {
-  GrassTile({required super.agentModel, required Vector2 position})
-      : super(position: position, spriteFilenames: ["grass-01.png", "grass-02.png"]);
+class FlowerTile extends TileSquare {
+  FlowerTile({required super.agentModel, required Vector2 position})
+      : super(position: position, spriteFilenames: ["flower-01.png", "flower-02.png"]);
 
   @override
   Future<void> onLoad() async {
@@ -15,10 +15,10 @@ class GrassTile extends TileSquare {
 
   @override
   void onModelChange() {
-    var model = agentModel as GrassModel;
+    var model = agentModel as FlowerModel;
 
-    var minEnergy = kGameConfiguration.plant.grass.initialEnergy;
-    var maxEnergy = kGameConfiguration.plant.grass.maxEnergy;
+    var minEnergy = kGameConfiguration.plant.flower.initialEnergy;
+    var maxEnergy = kGameConfiguration.plant.flower.maxEnergy;
     var currentEnergy = model.energy;
 
     // First, normalize currentEnergy to a value between 0 and 1
