@@ -30,6 +30,7 @@ class GameModel {
 
   GameModel(Vector2 size) {
     _size = size;
+    print(_size);
     layersMap = {
       PatchModel.staticLayerId: Layer(_size),
       PlantModel.staticLayerId: Layer(_size),

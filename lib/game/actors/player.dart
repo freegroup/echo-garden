@@ -13,6 +13,7 @@ class EmberPlayer extends SpriteAnimationComponent
     required super.position,
   }) : super(size: Vector2.all(kGameConfiguration.world.tileSize), anchor: Anchor.center) {
     velocity = Vector2(0, 0);
+    priority = 100;
   }
 
   @override
@@ -30,29 +31,11 @@ class EmberPlayer extends SpriteAnimationComponent
   @override
   void update(double dt) {
     position += velocity * dt;
-    /*
-    if (position.y > game.gameModel.height * 64) {
-      position.y = game.gameModel.height * 64;
-    }
-    if (position.y < 0) {
-      position.y = 0;
-    }
 
-    if (position.x > game.gameModel.width * 64) {
-      position.x = game.gameModel.width * 64;
-    }
-    if (position.x < 0) {
-      position.x = 0;
-    }
-    */
-    //print((position / worldTileSize)..floor());
-    double alignment = 5;
     Vector2 cellPlayer = (position / kGameConfiguration.world.tileSize)..floor();
-    // Calculate the aligned starting points
-    double alignedStartX = max(0,
-        (cellPlayer.x - kGameConfiguration.world.visibleTileRadius ~/ 2) ~/ alignment * alignment);
-    double alignedStartY = max(0,
-        (cellPlayer.y - kGameConfiguration.world.visibleTileRadius ~/ 2) ~/ alignment * alignment);
+
+    double alignedStartX = cellPlayer.x - kGameConfiguration.world.visibleTileRadius ~/ 2;
+    double alignedStartY = cellPlayer.y - kGameConfiguration.world.visibleTileRadius ~/ 2;
 
     Rect cellsAroundPlayer = Rect.fromLTWH(
       alignedStartX,

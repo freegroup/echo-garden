@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:echo_garden/configuration.dart';
@@ -48,6 +49,22 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
 
   set cellsToShow(Rect cells) {
     final stopwatch = Stopwatch()..start();
+
+    double radius = kGameConfiguration.world.visibleTileRadius;
+
+    // snap to multiple of 5 to avoid too much updates of the tilemap
+    //
+    double alignment = 5;
+    double alignedLeft = cells.left ~/ alignment * alignment;
+    double alignedTop = cells.top ~/ alignment * alignment;
+
+    alignedLeft = max(0, alignedLeft);
+    alignedTop = max(0, alignedTop);
+
+    alignedLeft = min(kGameConfiguration.tileMap.width - radius - 1, alignedLeft);
+    alignedTop = min(kGameConfiguration.tileMap.height - radius - 1, alignedTop);
+
+    cells = Rect.fromLTWH(alignedLeft, alignedTop, radius, radius);
 
     if (cells == _cellToShow) {
       return;
