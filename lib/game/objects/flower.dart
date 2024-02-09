@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/objects/tile.dart';
 import 'package:echo_garden/model/index.dart';
@@ -23,6 +25,7 @@ class FlowerTile extends TileSquare {
 
     // First, normalize currentEnergy to a value between 0 and 1
     double normalizedEnergy = (currentEnergy - minEnergy) / (maxEnergy - minEnergy);
+    normalizedEnergy = clampDouble(normalizedEnergy, 0, 1);
     spriteComponent.setOpacity(normalizedEnergy);
   }
 }

@@ -5,14 +5,15 @@ const kGameConfiguration = (
     tileSpriteSize: 63.0,
   ),
   world: (
-    tileSize: 64.0,
-    visibleTileRadius: 30.0,
+    tileSize: 32.0,
+    visibleTileRadius: 40.0,
     tileSnap: 3.0,
   ),
   rabbit: (
     birthThreshold: 50.0,
     initEnergy: 10,
-    energyPerStep: -1.05,
+    energyPerStep: -0.2,
+    maxEnergyPerEat: 0.5,
     maxEnergyCanEat: 25,
   ),
   plant: (

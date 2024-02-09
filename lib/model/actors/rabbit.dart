@@ -5,6 +5,7 @@ import 'package:echo_garden/game/agent.dart';
 import 'package:echo_garden/game/objects/rabbit.dart';
 import 'package:echo_garden/model/actors/actor.dart';
 import 'package:echo_garden/model/agent.dart';
+import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/objects/plant.dart';
 import 'package:echo_garden/model/strategy/base.dart';
 import 'package:echo_garden/utils/random.dart';
@@ -42,9 +43,10 @@ class RabbitAgent extends ActorModel {
 
   bool _move() {
     Set<Vector2> possibleMoves = strategy.getNeighborhood(
-      includeCenter: false,
+      includeCenter: true,
+      emptyCellsLookup: false,
       cell: cell,
-      layerId: ActorModel.staticLayerId,
+      layerId: SeedableModel.staticLayerId,
     );
     Vector2? newCell = pickRandomElement(possibleMoves);
     if (newCell != null) {
@@ -58,8 +60,14 @@ class RabbitAgent extends ActorModel {
     AgentModel? patch = gameModelRef.getAgentAtCell(cell, PlantModel.staticLayerId);
     if (patch != null && patch is PlantModel) {
       if (patch.energy < kGameConfiguration.rabbit.maxEnergyCanEat) {
-        energy = energy + patch.energy;
-        patch.die();
+        var diff = min(patch.energy, kGameConfiguration.rabbit.maxEnergyPerEat);
+        energy += diff;
+        patch.energy -= diff;
+        if (patch.energy <= 0) {
+          patch.die();
+        } else {
+          patch.visualization?.onModelChange();
+        }
         return true;
       }
     }

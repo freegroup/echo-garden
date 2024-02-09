@@ -18,7 +18,7 @@ class AgentModel {
     _visualization?.onModelChange();
   }
 
-  AgentModel({required this.scheduler, x = 0, y = 0, cell}) {
+  AgentModel({required this.scheduler, double x = 0.0, double y = 0.0, cell}) {
     if (cell != null) {
       this.cell = cell;
     } else {

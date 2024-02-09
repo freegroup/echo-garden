@@ -5,6 +5,7 @@ import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/model/actors/rabbit.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/scheduler/base.dart';
+import 'package:echo_garden/model/scheduler/random_percent.dart';
 import 'package:echo_garden/model/terraformer/diamond_square.dart';
 import 'package:flame/game.dart';
 
@@ -28,7 +29,7 @@ class GameModel {
       ActorModel.staticLayerId: Layer(_size),
     };
 
-    _rabbitScheduler = BaseScheduler(gameModelRef: this);
+    _rabbitScheduler = RandomPercentScheduler(percent: 33, gameModelRef: this);
     _patchScheduler = BaseScheduler(gameModelRef: this);
 
     var heightMap = diamondSquare(_size);
@@ -50,7 +51,7 @@ class GameModel {
       }
     }
 
-    var numRabbits = 2000;
+    var numRabbits = 300;
     var random = Random();
     for (int i = 0; i < numRabbits; i++) {
       double x = random.nextInt(width).toDouble();

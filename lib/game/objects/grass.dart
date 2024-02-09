@@ -1,9 +1,14 @@
+import 'dart:ui';
+
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/objects/tile.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
+import 'package:flutter/animation.dart';
 
 class GrassTile extends TileSquare {
+  OpacityEffect? opacityEffect;
   GrassTile({required super.agentModel, required Vector2 position})
       : super(position: position, spriteFilenames: ["grass-01.png", "grass-02.png"]);
 
@@ -23,6 +28,15 @@ class GrassTile extends TileSquare {
 
     // First, normalize currentEnergy to a value between 0 and 1
     double normalizedEnergy = (currentEnergy - minEnergy) / (maxEnergy - minEnergy);
-    spriteComponent.setOpacity(normalizedEnergy);
+    normalizedEnergy = clampDouble(normalizedEnergy, 0, 1);
+
+    opacityEffect?.removeFromParent();
+    opacityEffect = OpacityEffect.to(
+      normalizedEnergy,
+      EffectController(duration: 0.8, curve: Curves.easeInOut), // Adjust duration as needed
+    );
+    opacityEffect!.removeOnFinish = true;
+    // Apply the effect to the SpriteComponent
+    spriteComponent.add(opacityEffect!);
   }
 }
