@@ -2,17 +2,7 @@ import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/game.dart';
-import 'package:echo_garden/model/actors/actor.dart';
-import 'package:echo_garden/model/agent.dart';
-import 'package:echo_garden/model/layer.dart';
-import 'package:echo_garden/model/objects/flower.dart';
-import 'package:echo_garden/model/objects/grass.dart';
-import 'package:echo_garden/model/objects/patch.dart';
-import 'package:echo_garden/model/objects/plant.dart';
-import 'package:echo_garden/model/objects/soil.dart';
-import 'package:echo_garden/model/objects/tree.dart';
-import 'package:echo_garden/model/objects/water.dart';
-import 'package:echo_garden/model/objects/weed.dart';
+import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/scheduler/base.dart';
 import 'package:echo_garden/model/terraformer/diamond_square.dart';
 import 'package:flame/game.dart';
@@ -30,9 +20,9 @@ class GameModel {
 
   GameModel(Vector2 size) {
     _size = size;
-    print(_size);
     layersMap = {
       PatchModel.staticLayerId: Layer(_size),
+      SeedableModel.staticLayerId: Layer(_size),
       PlantModel.staticLayerId: Layer(_size),
       ActorModel.staticLayerId: Layer(_size),
     };
@@ -52,45 +42,33 @@ class GameModel {
     for (double x = 0; x < width; x++) {
       for (double y = 0; y < height; y++) {
         if (heightMap[x.toInt()][y.toInt()] < waterThreshold) {
-          add(WaterModel(scheduler: _patchScheduler, cell: Vector2(x, y)));
+          WaterModel(scheduler: _patchScheduler, cell: Vector2(x, y));
         } else {
-          add(SoilModel(scheduler: _patchScheduler, cell: Vector2(x, y)));
+          SoilModel(scheduler: _patchScheduler, cell: Vector2(x, y));
         }
       }
     }
-/*
-    var random = Random();
-    for (int i = 0; i < numAgents; i++) {
-      int x = random.nextInt(width);
-      int y = random.nextInt(height);
-      Patch? landmark = getAgentAtPosition<WaterPatch>(IntVector2(x, y)) as Patch?;
-      // do not place rabbits on the water....
-      if (landmark == null) {
-        RabbitAgent(scheduler: _rabbitScheduler, x: x, y: y);
-      }
-    }
-    */
   }
 
   void add(AgentModel agent) {
     var layer = layersMap[agent.layerId]!;
     layer.add(agent.cell, agent);
+    print("GameModel.add: ${agent.runtimeType} ${agent.cell}");
+
     gameVisualization?.onModelAdded(agent);
   }
 
   void remove(AgentModel agent) {
-    for (var layer in layersMap.values) {
-      layer.removeAgent(agent);
-    }
+    var layer = layersMap[agent.layerId]!;
+    layer.removeAgent(agent);
     _rabbitScheduler.remove(agent);
     _patchScheduler.remove(agent);
     gameVisualization?.onModelRemoved(agent);
   }
 
   void move(AgentModel agent, Vector2 newCell) {
-    for (var layer in layersMap.values) {
-      layer.move(agent, newCell);
-    }
+    var layer = layersMap[agent.layerId]!;
+    layer.move(agent, newCell);
     gameVisualization?.onModelMoved(agent);
   }
 
@@ -98,6 +76,7 @@ class GameModel {
   AgentModel? getAgentAtCell(Vector2 cell, String layerId) {
     var layer = layersMap[layerId];
     if (layer == null) {
+      print("No layer found......ERROR");
       return null;
     }
     return layer.get(cell);
@@ -136,24 +115,30 @@ class GameModel {
         // Expand the search within the specified radius around the chosen cell
         for (int dx = -radius; dx <= radius && !placed; dx++) {
           for (int dy = -radius; dy <= radius && !placed; dy++) {
-            double newX = ((x + dx + _size.x) % _size.x); // Ensure wrapping around the grid
+            // Ensure wrapping around the grid
+            double newX = ((x + dx + _size.x) % _size.x);
             double newY = ((y + dy + _size.y) % _size.y);
             Vector2 newCell = Vector2(newX, newY);
 
-            // If a position is empty, place the agent and mark as placed
-            if (getAgentAtCell(newCell, PlantModel.staticLayerId) == null) {
-              placeFunction(newCell);
-              placed = true;
+            // it is only possible to place "plants" on a seedable area
+            //
+            if (getAgentAtCell(newCell, SeedableModel.staticLayerId) != null) {
+              // check that in this cell is not already a plant...first comes, first serves.
+              //
+              if (getAgentAtCell(newCell, PlantModel.staticLayerId) == null) {
+                placeFunction(newCell);
+                placed = true;
+              }
             }
           }
         }
       }
     }
 
-    placePlants(totalGrass, (cell) => add(GrassModel(scheduler: _patchScheduler, cell: cell)));
-    placePlants(totalWeed, (cell) => add(WeedModel(scheduler: _patchScheduler, cell: cell)));
-    placePlants(totalFlower, (cell) => add(FlowerModel(scheduler: _patchScheduler, cell: cell)));
-    placePlants(totalTree, (cell) => add(TreeModel(scheduler: _patchScheduler, cell: cell)));
+    placePlants(totalGrass, (cell) => GrassModel(scheduler: _patchScheduler, cell: cell));
+    placePlants(totalWeed, (cell) => WeedModel(scheduler: _patchScheduler, cell: cell));
+    placePlants(totalFlower, (cell) => FlowerModel(scheduler: _patchScheduler, cell: cell));
+    placePlants(totalTree, (cell) => TreeModel(scheduler: _patchScheduler, cell: cell));
 
     // Stop the stopwatch
     stopwatch.stop();

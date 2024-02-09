@@ -4,11 +4,8 @@ import 'dart:ui';
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/actors/player.dart';
 import 'package:echo_garden/game/agent.dart';
-
 import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/game/layer.dart';
-import 'package:echo_garden/game/objects/grass.dart';
-import 'package:echo_garden/game/objects/water.dart';
 import 'package:echo_garden/main.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:flame/components.dart';
@@ -20,9 +17,9 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   late EmberPlayer _player;
   late Vector2 _canvasSize;
   late Vector2 _modelSize;
-  final Map<Vector2, AgentVisualization> _squareComponents = {};
+  final List<AgentModel> _visibleModels = [];
   double _elapsedTime = 0.0;
-  final double _updateInterval = 0.3; // 100 milliseconds
+  final double _updateInterval = 1.3; // 100 milliseconds
 
   Rect _cellToShow = const Rect.fromLTWH(0, 0, 0, 0);
   late Map<String, TileLayer> _layersMap;
@@ -32,8 +29,9 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     _canvasSize = _modelSize * kGameConfiguration.world.tileSize;
     _layersMap = {
       PatchModel.staticLayerId: TileLayer(priority: 0),
-      PlantModel.staticLayerId: TileLayer(priority: 1),
-      ActorModel.staticLayerId: TileLayer(priority: 2),
+      SeedableModel.staticLayerId: TileLayer(priority: 1),
+      PlantModel.staticLayerId: TileLayer(priority: 2),
+      ActorModel.staticLayerId: TileLayer(priority: 3),
     };
   }
 
@@ -73,10 +71,10 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     _cellToShow = cells;
 
     final removeStart = stopwatch.elapsedMilliseconds;
-    _squareComponents.removeWhere((cell, square) {
-      final shouldRemove = !_cellToShow.containsVector2(cell);
-      if (shouldRemove) {
-        _layersMap[square.agentModel.layerId]!.remove(square);
+    _visibleModels.removeWhere((agentModel) {
+      final shouldRemove = !_cellToShow.containsVector2(agentModel.cell);
+      if (shouldRemove && agentModel.visualization != null) {
+        _layersMap[agentModel.layerId]!.remove(agentModel.visualization!);
       }
       return shouldRemove;
     });
@@ -98,13 +96,20 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
         // Convert grid indices to Vector2 for compatibility with the rest of your code
         Vector2 cell = Vector2(x.toDouble(), y.toDouble());
 
-        // Check if there's an agent at this cell and if it's not already represented by a component
-        final agent = gameModel.getLayer(PatchModel.staticLayerId).get(cell);
-        if (agent != null && !_squareComponents.containsKey(cell)) {
-          AgentVisualization newComponent = agent.createVisualization();
-          _layersMap[agent.layerId]!.add(newComponent);
-          _squareComponents[cell] = newComponent;
-        }
+        // Fill up all visualization layers with the corresponding Model representation
+        //
+        _layersMap.forEach((layerId, visualizationLayer) {
+          // Get the model for the layer at the cell
+          //
+          final agentModel = gameModel.getLayer(layerId).get(cell);
+          // check if there is a model and not already a visualization is present
+          //
+          if (agentModel != null && !_visibleModels.contains(agentModel)) {
+            AgentVisualization agentVisualization = agentModel.createVisualization();
+            visualizationLayer.add(agentVisualization);
+            _visibleModels.add(agentModel);
+          }
+        });
       }
     }
 
@@ -152,7 +157,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     if (_cellToShow.containsVector2(agent.cell)) {
       var component = agent.createVisualization();
       _layersMap[agent.layerId]!.add(component);
-      _squareComponents[agent.cell] = component;
+      _visibleModels.add(agent);
     }
   }
 

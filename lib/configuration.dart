@@ -5,11 +5,11 @@ const kGameConfiguration = (
     width: 100.0,
     height: 100.0,
     tilemap: "world.png",
-    tileSpriteSize: 64,
+    tileSpriteSize: 63.0,
   ),
   world: (
-    tileSize: 32.0,
-    visibleTileRadius: 40.0,
+    tileSize: 64.0,
+    visibleTileRadius: 10.0,
   ),
   rabbit: (
     birthThreshold: 50.0,

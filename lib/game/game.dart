@@ -22,7 +22,24 @@ class GameVisualization extends FlameGame with HasKeyboardHandlerComponents {
   Future<void> onLoad() async {
     await images.loadAll([
       'ember.png',
-      'world.png',
+      'beach-01.png',
+      'beach-02.png',
+      'fir-01.png',
+      'fir-02.png',
+      'fir-03.png',
+      'fir-04.png',
+      'grass-01.png',
+      'grass-02.png',
+      'soil-01.png',
+      'soil-02.png',
+      'tree-01.png',
+      'tree-02.png',
+      'tree-03.png',
+      'tree-04.png',
+      'water-01.png',
+      'water-02.png',
+      'water-beach-01.png',
+      'water-beach-02.png',
     ]);
 
     addAll([cameraComponent, world]);
