@@ -17,4 +17,6 @@ class AgentVisualization extends PositionComponent {
     super.priority,
     super.key,
   });
+
+  void onModelChange() {}
 }

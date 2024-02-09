@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/agent.dart';
 import 'package:echo_garden/game/objects/grass.dart';
@@ -14,5 +16,19 @@ class GrassModel extends PlantModel {
   }
 
   @override
-  void step() {}
+  void step() {
+    var oldEnergy = energy;
+    _grow();
+
+    if (oldEnergy != energy) {
+      visualization?.onModelChange();
+    }
+  }
+
+  _grow() {
+    energy = min(
+      kGameConfiguration.plant.grass.maxEnergy,
+      energy + kGameConfiguration.plant.grass.incEnergie,
+    );
+  }
 }

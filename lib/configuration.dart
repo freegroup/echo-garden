@@ -10,6 +10,7 @@ const kGameConfiguration = (
   world: (
     tileSize: 64.0,
     visibleTileRadius: 10.0,
+    tileSnap: 3.0,
   ),
   rabbit: (
     birthThreshold: 50.0,
@@ -24,7 +25,9 @@ const kGameConfiguration = (
       growPercentage: 0.005,
     ),
     grass: (
-      initialEnergy: 1.5,
+      initialEnergy: 0.2,
+      maxEnergy: 1.5,
+      incEnergie: 0.1,
       growPercentage: 0.035,
     ),
     flower: (

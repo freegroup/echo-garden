@@ -8,7 +8,6 @@ flutter:
   assets:
     - assets/audio/
     - assets/images/
-    - assets/tiles/
 
 environment:
   sdk: '>=3.2.3 <4.0.0'

@@ -52,7 +52,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
 
     // snap to multiple of 5 to avoid too much updates of the tilemap
     //
-    double alignment = 5;
+    double alignment = kGameConfiguration.world.tileSnap;
     double alignedLeft = cells.left ~/ alignment * alignment;
     double alignedTop = cells.top ~/ alignment * alignment;
 
@@ -75,6 +75,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
       final shouldRemove = !_cellToShow.containsVector2(agentModel.cell);
       if (shouldRemove && agentModel.visualization != null) {
         _layersMap[agentModel.layerId]!.remove(agentModel.visualization!);
+        agentModel.visualization = null;
       }
       return shouldRemove;
     });
@@ -108,6 +109,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
             AgentVisualization agentVisualization = agentModel.createVisualization();
             visualizationLayer.add(agentVisualization);
             _visibleModels.add(agentModel);
+            agentModel.visualization = agentVisualization;
           }
         });
       }
@@ -158,6 +160,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
       var component = agent.createVisualization();
       _layersMap[agent.layerId]!.add(component);
       _visibleModels.add(agent);
+      agent.visualization = component;
     }
   }
 
