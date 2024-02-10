@@ -6,9 +6,22 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 // Define an extension on Rect
+/*
 extension RectExtension on Rect {
   bool containsVector2(Vector2 vector) {
     return contains(Offset(vector.x, vector.y));
+  }
+}
+*/
+extension RectExtension on Rect {
+  bool containsVector2(Vector2 vector) {
+    // Adjust the condition to include the right and bottom edges
+    return vector.x >= left && vector.x <= right && vector.y >= top && vector.y <= bottom;
+  }
+
+  bool containsNotVector2(Vector2 vector) {
+    // Adjust the condition to include the right and bottom edges
+    return !(vector.x >= left && vector.x <= right && vector.y >= top && vector.y <= bottom);
   }
 }
 

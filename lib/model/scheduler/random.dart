@@ -11,10 +11,7 @@ class RandomScheduler extends BaseScheduler {
     List<AgentModel> numbersList = agents.toList();
     numbersList.shuffle(Random());
     for (AgentModel agent in numbersList) {
-      agent.preStep();
       agent.step();
-      agent.postStep();
     }
-    steps += 1;
   }
 }

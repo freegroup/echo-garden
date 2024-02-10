@@ -8,9 +8,6 @@ import 'package:echo_garden/model/game.dart';
 /// has a step method which takes no arguments and executes the agent’s actions.
 ///
 class BaseScheduler {
-  // the number of steps the scheduler has taken
-  int steps = 0;
-
   // The model instance associated with the scheduler.
   final GameModel gameModelRef;
 
@@ -20,27 +17,19 @@ class BaseScheduler {
   BaseScheduler({required this.gameModelRef});
 
   void add(AgentModel agent) {
-    if (!agents.contains(agent)) {
-      agents.add(agent);
-      //gameModelRef.add(agent);
-    } else {
-      print("is already member of the Scheduler: $agent");
-    }
+    assert(agents.contains(agent) == false);
+    agents.add(agent);
   }
 
   void remove(agent) {
-    agents.remove(agent);
+    bool found = agents.remove(agent);
+    assert(found);
   }
 
   void step() {
     List<AgentModel> numbersList = agents.toList();
     for (AgentModel agent in numbersList) {
-      agent.preStep();
       agent.step();
-      agent.postStep();
     }
-    steps += 1;
   }
-
-  int get agentCount => agents.length;
 }

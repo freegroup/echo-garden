@@ -6,29 +6,34 @@ import 'package:echo_garden/game/objects/grass.dart';
 import 'package:echo_garden/model/objects/plant.dart';
 
 class GrassModel extends PlantModel {
-  GrassModel({required super.scheduler, super.x, super.y, super.cell}) {
+  GrassModel({required super.gameModelRef, required super.cell, super.energy}) {
     energy = kGameConfiguration.plant.grass.initialEnergy;
   }
 
   @override
   AgentVisualization createVisualization() {
-    return GrassTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
+    assert(visualization == null);
+
+    return visualization =
+        GrassTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
   }
 
   @override
-  void step() {
-    var oldEnergy = energy;
-    _grow();
+  void step() async {
+    bool changed = false;
+    changed |= _grow();
 
-    if (oldEnergy != energy) {
-      visualization?.onModelChange();
-    }
+    if (changed && visualization != null) await visualization!.onModelChange();
   }
 
-  _grow() {
+  bool _grow() {
+    if (energy >= kGameConfiguration.plant.grass.maxEnergy) {
+      return false;
+    }
     energy = min(
       kGameConfiguration.plant.grass.maxEnergy,
       energy + kGameConfiguration.plant.grass.incEnergie,
     );
+    return true;
   }
 }

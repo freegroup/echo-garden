@@ -17,7 +17,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   late EmberPlayer _player;
   late Vector2 _canvasSize;
   late Vector2 _modelSize;
-  final List<AgentModel> _visibleModels = [];
+  final Set<AgentModel> _visibleModels = <AgentModel>{};
   double _elapsedTime = 0.0;
   final double _updateInterval = 1.3; // 100 milliseconds
 
@@ -72,12 +72,17 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
 
     final removeStart = stopwatch.elapsedMilliseconds;
     _visibleModels.removeWhere((agentModel) {
-      final shouldRemove = !_cellToShow.containsVector2(agentModel.cell);
-      if (shouldRemove && agentModel.visualization != null) {
-        _layersMap[agentModel.layerId]!.remove(agentModel.visualization!);
-        agentModel.visualization = null;
+      try {
+        if (_cellToShow.containsNotVector2(agentModel.cell)) {
+          agentModel.visualization?.removeFromParent();
+          agentModel.visualization = null;
+          return true;
+        }
+        return false;
+      } catch (e) {
+        print(e);
       }
-      return shouldRemove;
+      return true;
     });
     final removeEnd = stopwatch.elapsedMilliseconds;
     print('Time to remove squares: ${removeEnd - removeStart}ms');
@@ -100,16 +105,19 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
         // Fill up all visualization layers with the corresponding Model representation
         //
         _layersMap.forEach((layerId, visualizationLayer) async {
-          // Get the model for the layer at the cell
-          //
-          final agentModel = gameModel.getLayer(layerId).get(cell);
-          // check if there is a model and not already a visualization is present
-          //
-          if (agentModel != null && !_visibleModels.contains(agentModel)) {
-            AgentVisualization agentVisualization = agentModel.createVisualization();
-            await visualizationLayer.add(agentVisualization);
-            agentModel.visualization = agentVisualization;
-            _visibleModels.add(agentModel);
+          try {
+            // Get the model for the layer at the cell
+            //
+            final agentModel = gameModel.getLayer(layerId).get(cell);
+            // check if there is a model and not already a visualization is present
+            //
+            if (agentModel != null && !_visibleModels.contains(agentModel)) {
+              agentModel.createVisualization();
+              await visualizationLayer.add(agentModel.visualization!);
+              _visibleModels.add(agentModel);
+            }
+          } catch (e) {
+            print(e);
           }
         });
       }
@@ -164,17 +172,13 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     }
   }
 
-  void onModelRemoved(AgentModel agent) async {
-    // check if the agent in the visible area an add them if yes
-    if (_cellToShow.containsVector2(agent.cell)) {
-      AgentVisualization? component = agent.visualization;
-      if (component != null) {
-        _layersMap[agent.layerId]?.remove(component);
-        _visibleModels.remove(agent);
-        agent.visualization = null;
-      }
-    }
+  Future<void> onModelRemoved(AgentModel agent) async {
+    agent.visualization?.removeFromParent();
+    agent.visualization = null;
+    _visibleModels.remove(agent);
   }
 
-  void onModelMoved(AgentModel agent) {}
+  Future<void> onModelMoved(AgentModel agent) async {
+    //
+  }
 }

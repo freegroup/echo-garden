@@ -4,11 +4,13 @@ import 'package:echo_garden/game/objects/water.dart';
 import 'package:echo_garden/model/objects/patch.dart';
 
 class WaterModel extends PatchModel {
-  WaterModel({required super.scheduler, super.x, super.y, super.cell}) {}
+  WaterModel({required super.gameModelRef, required super.cell, super.energy});
 
   @override
   AgentVisualization createVisualization() {
-    return WaterTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
+    assert(visualization == null);
+
+    return visualization= WaterTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
   }
 
   @override

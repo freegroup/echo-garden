@@ -5,41 +5,29 @@ import 'package:echo_garden/model/game.dart';
 import 'package:echo_garden/model/scheduler/base.dart';
 import 'package:flame/components.dart';
 
+Vector2 zero = Vector2.all(0);
+
 class AgentModel {
-  static String staticLayerId = "AgentModel";
-  late Vector2 cell;
-  final BaseScheduler scheduler;
-  AgentVisualization? _visualization;
+  static String staticLayerId = "$AgentModel";
+  Vector2 cell;
+  double energy;
 
-  AgentModel({required this.scheduler, double x = 0.0, double y = 0.0, cell}) {
-    if (cell != null) {
-      this.cell = cell;
-    } else {
-      this.cell = Vector2(x, y);
-    }
-    scheduler.add(this);
+  final GameModel gameModelRef;
+  AgentVisualization? visualization;
+
+  AgentModel({required this.gameModelRef, required this.cell, this.energy = 0}) {
+    //scheduler.add(this);
   }
 
-  GameModel get gameModelRef => scheduler.gameModelRef;
+ // GameModel get gameModelRef => scheduler.gameModelRef;
   String get layerId => AgentModel.staticLayerId;
-  AgentVisualization? get visualization => _visualization;
-  set visualization(AgentVisualization? value) {
-    _visualization = value;
-    _visualization?.onModelChange();
-  }
 
   AgentVisualization createVisualization() {
-    return ColoredSquare.red(this, cell * kGameConfiguration.world.tileSize);
+    assert(visualization == null);
+    return visualization = ColoredSquare.red(this, cell * kGameConfiguration.world.tileSize);
   }
 
-  void preStep() {}
-
-  void step() {}
-
-  void postStep() {}
-
-  void die() {
-    scheduler.remove(this);
-    gameModelRef.remove(this);
+  void step() {
+    //
   }
 }

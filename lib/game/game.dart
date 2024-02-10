@@ -46,15 +46,15 @@ class GameVisualization extends FlameGame with HasKeyboardHandlerComponents {
     addAll([cameraComponent, world]);
   }
 
-  void onModelAdded(AgentModel agent) async {
+  Future<void> onModelAdded(AgentModel agent) async {
     await world.onModelAdded(agent);
   }
 
-  void onModelRemoved(AgentModel agent) {
+  Future<void> onModelRemoved(AgentModel agent) async {
     world.onModelRemoved(agent);
   }
 
-  void onModelMoved(AgentModel agent) {
+  Future<void> onModelMoved(AgentModel agent) async {
     world.onModelMoved(agent);
   }
 }

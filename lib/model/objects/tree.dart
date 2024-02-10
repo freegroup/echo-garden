@@ -15,14 +15,17 @@ import 'package:flame/components.dart';
 class TreeModel extends PlantModel {
   late final MovementStrategy strategy;
 
-  TreeModel({required super.scheduler, super.x, super.y, super.cell}) {
-    strategy = MovementStrategy(model: scheduler.gameModelRef);
+  TreeModel({required super.gameModelRef, required super.cell, super.energy}) {
+    strategy = MovementStrategy(model: gameModelRef);
     energy = kGameConfiguration.plant.tree.initialEnergy;
   }
 
   @override
   AgentVisualization createVisualization() {
-    return TreeTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
+    assert(visualization == null);
+
+    return visualization =
+        TreeTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
   }
 
   @override
@@ -51,8 +54,8 @@ class TreeModel extends PlantModel {
         AgentModel? patch = gameModelRef.getAgentAtCell(cellCandidate, PatchModel.staticLayerId);
         AgentModel? plant = gameModelRef.getAgentAtCell(cellCandidate, PlantModel.staticLayerId);
         if (patch is SeedableModel && plant is! TreeModel) {
-          TreeModel(scheduler: scheduler, cell: cellCandidate);
-          plant?.die();
+          TreeModel(gameModelRef: gameModelRef, cell: cellCandidate);
+          if (plant != null) gameModelRef.remove(plant);
         }
       }
     }

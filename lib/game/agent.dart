@@ -18,5 +18,5 @@ class AgentVisualization extends PositionComponent {
     super.key,
   });
 
-  void onModelChange() {}
+  Future<void> onModelChange() async {}
 }

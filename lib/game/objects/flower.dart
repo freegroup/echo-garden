@@ -12,11 +12,11 @@ class FlowerTile extends TileSquare {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    spriteComponent.setOpacity(0.0);
+    spriteComponent?.setOpacity(0.0);
   }
 
   @override
-  void onModelChange() {
+  Future<void> onModelChange() async {
     var model = agentModel as FlowerModel;
 
     var minEnergy = kGameConfiguration.plant.flower.initialEnergy;
@@ -26,6 +26,6 @@ class FlowerTile extends TileSquare {
     // First, normalize currentEnergy to a value between 0 and 1
     double normalizedEnergy = (currentEnergy - minEnergy) / (maxEnergy - minEnergy);
     normalizedEnergy = clampDouble(normalizedEnergy, 0, 1);
-    spriteComponent.setOpacity(normalizedEnergy);
+    spriteComponent?.setOpacity(normalizedEnergy);
   }
 }

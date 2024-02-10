@@ -12,7 +12,7 @@ import 'package:flame/game.dart';
 class GameModel {
   late final Vector2 _size;
   late final BaseScheduler _rabbitScheduler;
-  late final BaseScheduler _patchScheduler;
+  late final BaseScheduler _defaultScheduler;
   GameVisualization? gameVisualization;
 
   late Map<String, Layer> layersMap;
@@ -30,7 +30,7 @@ class GameModel {
     };
 
     _rabbitScheduler = RandomPercentScheduler(percent: 33, gameModelRef: this);
-    _patchScheduler = BaseScheduler(gameModelRef: this);
+    _defaultScheduler = BaseScheduler(gameModelRef: this);
 
     var heightMap = diamondSquare(_size);
 
@@ -44,44 +44,51 @@ class GameModel {
     for (double x = 0; x < width; x++) {
       for (double y = 0; y < height; y++) {
         if (heightMap[x.toInt()][y.toInt()] < waterThreshold) {
-          add(WaterModel(scheduler: _patchScheduler, cell: Vector2(x, y)));
+          add(WaterModel(gameModelRef: this, cell: Vector2(x, y)));
         } else {
-          add(SoilModel(scheduler: _patchScheduler, cell: Vector2(x, y)));
+          add(SoilModel(gameModelRef: this, cell: Vector2(x, y)));
         }
       }
     }
 
-    var numRabbits = 300;
+    var numRabbits = 30;
     var random = Random();
     for (int i = 0; i < numRabbits; i++) {
       double x = random.nextInt(width).toDouble();
       double y = random.nextInt(height).toDouble();
-      AgentModel? landmark = getAgentAtCell(Vector2(x, y), SeedableModel.staticLayerId);
+      Vector2 cell = Vector2(x, y);
+      AgentModel? landmark = getAgentAtCell(cell, SeedableModel.staticLayerId);
       // do not place rabbits on the water....
       if (landmark != null) {
-        print("add rabbit");
-        add(RabbitAgent(scheduler: _rabbitScheduler, x: x, y: y));
+        add(RabbitAgent(gameModelRef: this, cell: cell));
       }
     }
   }
 
-  Future<void> add(AgentModel agent) async {
-    var layer = layersMap[agent.layerId]!;
-    layer.add(agent.cell, agent);
-    gameVisualization?.onModelAdded(agent);
+  void add(AgentModel agent) async {
+    layersMap[agent.layerId]?.add(agent.cell, agent);
+    if (agent is RabbitAgent) {
+      _rabbitScheduler.add(agent);
+    } else {
+      _defaultScheduler.add(agent);
+    }
+    await gameVisualization?.onModelAdded(agent);
   }
 
-  void remove(AgentModel agent) {
-    var layer = layersMap[agent.layerId]!;
-    layer.removeAgent(agent);
-    gameVisualization?.onModelRemoved(agent);
+  void remove(AgentModel agent) async {
+    if (agent is RabbitAgent) {
+      _rabbitScheduler.remove(agent);
+    } else {
+      _defaultScheduler.remove(agent);
+    }
+    layersMap[agent.layerId]?.remove(agent);
+    await gameVisualization?.onModelRemoved(agent);
   }
 
-  void move(AgentModel agent, Vector2 newCell) {
-    var layer = layersMap[agent.layerId]!;
-    layer.move(agent, newCell);
+  void move(AgentModel agent, Vector2 newCell) async {
+    layersMap[agent.layerId]?.move(agent, newCell);
     agent.cell = newCell;
-    gameVisualization?.onModelMoved(agent);
+    await gameVisualization?.onModelMoved(agent);
   }
 
   // Method to get a random agent of type T at a specific cell position
@@ -101,7 +108,7 @@ class GameModel {
 
   void step() {
     _grow();
-    _patchScheduler.step();
+    _defaultScheduler.step();
     _rabbitScheduler.step();
   }
 
@@ -147,10 +154,10 @@ class GameModel {
       }
     }
 
-    placePlants(totalGrass, (cell) => add(GrassModel(scheduler: _patchScheduler, cell: cell)));
-    placePlants(totalWeed, (cell) => add(WeedModel(scheduler: _patchScheduler, cell: cell)));
-    placePlants(totalFlower, (cell) => add(FlowerModel(scheduler: _patchScheduler, cell: cell)));
-    placePlants(totalTree, (cell) => add(TreeModel(scheduler: _patchScheduler, cell: cell)));
+    placePlants(totalGrass, (cell) => add(GrassModel(gameModelRef: this, cell: cell)));
+    placePlants(totalWeed, (cell) => add(WeedModel(gameModelRef: this, cell: cell)));
+    placePlants(totalFlower, (cell) => add(FlowerModel(gameModelRef: this, cell: cell)));
+    placePlants(totalTree, (cell) => add(TreeModel(gameModelRef: this, cell: cell)));
 
     // Stop the stopwatch
     stopwatch.stop();

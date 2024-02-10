@@ -19,12 +19,7 @@ class RandomPercentScheduler extends BaseScheduler {
 
     // Pick the first 'agentsToStep' agents from the shuffled list and step through them
     for (AgentModel agent in shuffledAgents.take(agentsToStep)) {
-      agent.preStep();
       agent.step();
-      agent.postStep();
     }
-
-    // Increment the step count
-    steps += 1;
   }
 }

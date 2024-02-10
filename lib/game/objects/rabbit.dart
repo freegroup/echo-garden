@@ -12,8 +12,7 @@ class RabbitTile extends TileSquare {
       : super(position: position, spriteFilenames: ["rabbit-01.png"]);
 
   @override
-  void onModelChange() {
-    print("rabbit changed....");
+  Future<void> onModelChange() async {
     final model = agentModel as RabbitAgent;
     final targetPosition = model.cell * kGameConfiguration.world.tileSize;
 
@@ -24,6 +23,6 @@ class RabbitTile extends TileSquare {
       EffectController(duration: 1.5, curve: Curves.easeInOut), // Use any easing curve you prefer
     );
 
-    add(moveEffect!);
+    await add(moveEffect!);
   }
 }

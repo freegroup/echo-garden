@@ -15,11 +15,11 @@ class GrassTile extends TileSquare {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    spriteComponent.setOpacity(0.0);
+    spriteComponent?.setOpacity(0.0);
   }
 
   @override
-  void onModelChange() {
+  Future<void> onModelChange() async {
     var model = agentModel as GrassModel;
 
     var minEnergy = kGameConfiguration.plant.grass.initialEnergy;
@@ -37,6 +37,6 @@ class GrassTile extends TileSquare {
     );
     opacityEffect!.removeOnFinish = true;
     // Apply the effect to the SpriteComponent
-    spriteComponent.add(opacityEffect!);
+    await spriteComponent?.add(opacityEffect!);
   }
 }

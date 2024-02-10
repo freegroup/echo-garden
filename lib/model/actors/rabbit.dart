@@ -9,19 +9,21 @@ import 'package:echo_garden/utils/random.dart';
 import 'package:flame/components.dart';
 
 class RabbitAgent extends ActorModel {
-  double energy = 1;
   double birthThreshold = kGameConfiguration.rabbit.birthThreshold;
 
   late final MovementStrategy strategy;
 
-  RabbitAgent({required super.scheduler, super.x, super.y, super.cell, energy}) {
-    strategy = MovementStrategy(model: scheduler.gameModelRef);
-    this.energy = energy ?? Random().nextInt(kGameConfiguration.rabbit.initEnergy).toDouble();
+  RabbitAgent({required super.gameModelRef, required super.cell, super.energy}) {
+    strategy = MovementStrategy(model: gameModelRef);
+    energy =
+        energy == 0 ? Random().nextInt(kGameConfiguration.rabbit.initEnergy).toDouble() : energy;
   }
 
   @override
   AgentVisualization createVisualization() {
-    return RabbitTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
+    assert(visualization == null);
+    return visualization =
+        RabbitTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
   }
 
   @override
@@ -32,10 +34,13 @@ class RabbitAgent extends ActorModel {
     changed |= _reproduce();
     energy = energy + kGameConfiguration.rabbit.energyPerStep;
     if (energy < 0) {
-      die();
-      changed = true;
+      gameModelRef.remove(this);
+    } else if (changed) {
+      visualization?.onModelChange();
     }
-    if (changed) visualization?.onModelChange();
+    if (visualization != null) {
+      assert(visualization!.parent != null);
+    }
   }
 
   bool _move() {
@@ -61,7 +66,7 @@ class RabbitAgent extends ActorModel {
         energy += diff;
         patch.energy -= diff;
         if (patch.energy <= 0) {
-          patch.die();
+          gameModelRef.remove(patch);
         } else {
           patch.visualization?.onModelChange();
         }
@@ -74,8 +79,7 @@ class RabbitAgent extends ActorModel {
   bool _reproduce() {
     if (energy > birthThreshold) {
       energy /= 2;
-      print("reproduce");
-      gameModelRef.add(RabbitAgent(scheduler: scheduler, cell: cell, energy: energy));
+      gameModelRef.add(RabbitAgent(gameModelRef: gameModelRef, cell: cell, energy: energy));
       return true;
     }
     return false;

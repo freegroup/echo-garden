@@ -6,13 +6,15 @@ import 'package:echo_garden/game/objects/flower.dart';
 import 'package:echo_garden/model/objects/plant.dart';
 
 class FlowerModel extends PlantModel {
-  FlowerModel({required super.scheduler, super.x, super.y, super.cell}) {
+  FlowerModel({required super.gameModelRef, required super.cell, super.energy}) {
     energy = kGameConfiguration.plant.flower.initialEnergy;
   }
 
   @override
   AgentVisualization createVisualization() {
-    return FlowerTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
+    assert(visualization == null);
+    return visualization =
+        FlowerTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
   }
 
   @override

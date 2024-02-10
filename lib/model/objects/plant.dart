@@ -1,11 +1,9 @@
 import 'package:echo_garden/model/agent.dart';
 
 abstract class PlantModel extends AgentModel {
-  static String staticLayerId = "PlantModel";
+  static String staticLayerId = "$PlantModel";
 
-  double energy;
-
-  PlantModel({required super.scheduler, this.energy = 0, super.x, super.y, super.cell});
+  PlantModel({required super.gameModelRef, required super.cell, super.energy});
 
   @override
   String get layerId => PlantModel.staticLayerId;

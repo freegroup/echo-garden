@@ -28,25 +28,24 @@ class Layer {
     return _grid[ivCell.x][ivCell.y];
   }
 
-  void remove(Vector2 cell) {
-    final ivCell = _toIntVector2(cell);
-    _grid[ivCell.x][ivCell.y] = null;
-  }
-
-  void removeAgent(AgentModel agent) {
+  bool remove(AgentModel agent) {
     final cell = _toIntVector2(agent.cell);
     if (_grid[cell.x][cell.y] == agent) {
       _grid[cell.x][cell.y] = null;
+      return true;
     }
+    return false;
   }
 
-  void move(AgentModel agent, Vector2 newCell) {
+  bool move(AgentModel agent, Vector2 newCell) {
     final oldCell = _toIntVector2(agent.cell);
     final ivNewCell = _toIntVector2(newCell);
     if (_grid[oldCell.x][oldCell.y] == agent) {
       _grid[oldCell.x][oldCell.y] = null;
       _grid[ivNewCell.x][ivNewCell.y] = agent;
+      return true;
     }
+    return false;
   }
 
   Iterable<MapEntry<Vector2, AgentModel>> getNonEmptyCellsAndAgents() sync* {
