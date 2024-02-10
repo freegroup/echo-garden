@@ -23,42 +23,57 @@ class TreeModel extends PlantModel {
   @override
   AgentVisualization createVisualization() {
     assert(visualization == null);
-
-    return visualization =
-        TreeTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
+    return visualization = TreeTile(
+      agentModel: this,
+      position: cell * kGameConfiguration.world.tileSize,
+    );
   }
 
   @override
   void step() {
-    _grow();
-    _seed();
+    bool changed = false;
+    changed |= _grow();
+    changed |= _seed();
+
+    if (changed) visualization?.onModelChange();
   }
 
-  _grow() {
+  bool _grow() {
+    if (energy >= kGameConfiguration.plant.tree.maxEnergy) {
+      return false;
+    }
     energy = min(
       kGameConfiguration.plant.tree.maxEnergy,
       energy + kGameConfiguration.plant.tree.growEnergy,
     );
+    return true;
   }
 
-  _seed() {
+  bool _seed() {
     var percentage = Random().nextInt(100).toDouble() / 100;
     if (percentage > kGameConfiguration.plant.tree.seedPercentage) {
-      return;
+      return false;
     }
 
     if (energy >= kGameConfiguration.plant.tree.seedEnergy) {
-      var cells = strategy.getNeighborhood(cell: cell, layerId: PlantModel.staticLayerId);
+      var cells = strategy.getNeighborhood(
+        cell: cell,
+        layerId: PlantModel.staticLayerId,
+        emptyCellsLookup: false,
+      );
       Vector2? cellCandidate = pickRandomElement(cells);
       if (cellCandidate != null) {
-        AgentModel? patch = gameModelRef.getAgentAtCell(cellCandidate, PatchModel.staticLayerId);
+        AgentModel? patch = gameModelRef.getAgentAtCell(cellCandidate, SeedableModel.staticLayerId);
         AgentModel? plant = gameModelRef.getAgentAtCell(cellCandidate, PlantModel.staticLayerId);
+
         if (patch is SeedableModel && plant is! TreeModel) {
           // replace "anything" with the new tree
           if (plant != null) gameModelRef.remove(plant);
           gameModelRef.add(TreeModel(gameModelRef: gameModelRef, cell: cellCandidate));
+          return true;
         }
       }
     }
+    return false;
   }
 }

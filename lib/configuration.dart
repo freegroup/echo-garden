@@ -1,19 +1,20 @@
 const kGameConfiguration = (
   tileMap: (
-    width: 100.0,
-    height: 100.0,
-    tileSpriteSize: 63.0,
+    width: 50.0,
+    height: 50.0,
+    tileSpriteSize: 64.0,
   ),
   world: (
-    tileSize: 32.0,
-    visibleTileRadius: 40.0,
-    tileSnap: 3.0,
+    tileSize: 64.0,
+    visibleTileRadius: 35.0,
+    tileSnap: 1.0,
+    waterPercentage: 50.0,
   ),
   rabbit: (
     birthThreshold: 15.0,
     initEnergy: 5,
-    energyPerStep: -0.1,
-    maxEnergyPerEat: 0.2,
+    energyPerStep: -0.4,
+    maxEnergyPerEat: 0.6,
     maxEnergyCanEat: 25,
   ),
   plant: (
@@ -22,9 +23,9 @@ const kGameConfiguration = (
       growPercentage: 0.005,
     ),
     grass: (
-      initialEnergy: 0.2,
+      initialEnergy: 0.01,
       maxEnergy: 1.5,
-      incEnergie: 0.3,
+      incEnergie: 0.05,
       growPercentage: 0.055,
     ),
     flower: (
@@ -35,7 +36,7 @@ const kGameConfiguration = (
     ),
     tree: (
       initialEnergy: 0.5,
-      growEnergy: 0.04,
+      growEnergy: 0.5,
       maxEnergy: 100.0,
       seedEnergy: 9.0,
       seedPercentage: 0.1,

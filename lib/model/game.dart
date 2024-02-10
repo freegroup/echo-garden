@@ -4,8 +4,11 @@ import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/model/actors/rabbit.dart';
 import 'package:echo_garden/model/index.dart';
+import 'package:echo_garden/model/objects/beach.dart';
+import 'package:echo_garden/model/objects/flat_water.dart';
 import 'package:echo_garden/model/scheduler/base.dart';
 import 'package:echo_garden/model/scheduler/random_percent.dart';
+import 'package:echo_garden/model/strategy/base.dart';
 import 'package:echo_garden/model/terraformer/diamond_square.dart';
 import 'package:flame/game.dart';
 
@@ -30,7 +33,8 @@ class GameModel {
     };
 
     _rabbitScheduler = RandomPercentScheduler(percent: 33, gameModelRef: this);
-    _defaultScheduler = BaseScheduler(gameModelRef: this);
+    _defaultScheduler = RandomPercentScheduler(percent: 53, gameModelRef: this);
+    //_defaultScheduler = BaseScheduler(gameModelRef: this);
 
     var heightMap = diamondSquare(_size);
 
@@ -39,7 +43,8 @@ class GameModel {
     sortedHeights.sort();
 
     // Find the water threshold for the lowest 20%
-    int twentyPercentIndex = (sortedHeights.length * 0.2).floor();
+    int twentyPercentIndex =
+        (sortedHeights.length * (kGameConfiguration.world.waterPercentage / 100.0)).floor();
     double waterThreshold = sortedHeights[twentyPercentIndex];
     for (double x = 0; x < width; x++) {
       for (double y = 0; y < height; y++) {
@@ -47,6 +52,43 @@ class GameModel {
           add(WaterModel(gameModelRef: this, cell: Vector2(x, y)));
         } else {
           add(SoilModel(gameModelRef: this, cell: Vector2(x, y)));
+        }
+      }
+    }
+
+    // place beach tiles near to the water.
+    // this means convert "seedable" to "beach"
+    //
+    var placeChecker = MovementStrategy(model: this);
+    for (double x = 0; x < width; x++) {
+      for (double y = 0; y < height; y++) {
+        Vector2 cell = Vector2(x, y);
+        AgentModel? seedable = getAgentAtCell(cell, SeedableModel.staticLayerId);
+        // check of around of the seedable is water => convert to beach
+        if (seedable != null) {
+          if (placeChecker.isAgentTypeNeighborOnLayer(
+              cell: cell, layerId: PatchModel.staticLayerId, type: WaterModel)) {
+            remove(seedable);
+            add(BeachModel(gameModelRef: this, cell: cell));
+          }
+        }
+      }
+    }
+
+    // place flat-water tiles near to the beach.
+    // this means convert "seedable" to "beach"
+    //
+    for (double x = 0; x < width; x++) {
+      for (double y = 0; y < height; y++) {
+        Vector2 cell = Vector2(x, y);
+        AgentModel? water = getAgentAtCell(cell, PatchModel.staticLayerId);
+        // check of around of the seedable is water => convert to beach
+        if (water is WaterModel) {
+          if (placeChecker.isAgentTypeNeighborOnLayer(
+              cell: cell, layerId: PatchModel.staticLayerId, type: BeachModel)) {
+            remove(water);
+            add(FlatWaterModel(gameModelRef: this, cell: cell));
+          }
         }
       }
     }
@@ -107,9 +149,9 @@ class GameModel {
   }
 
   void step() {
-    _grow();
     _defaultScheduler.step();
     _rabbitScheduler.step();
+    _grow();
   }
 
   void _grow() {

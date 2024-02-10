@@ -1,21 +1,33 @@
-import 'dart:ui';
+import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/game/objects/tile.dart';
+import 'package:echo_garden/game/objects/growing_tile.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
-import 'package:flutter/animation.dart';
 
-class GrassTile extends TileSquare {
+class GrassTile extends GrowingTileSquare {
   OpacityEffect? opacityEffect;
   GrassTile({required super.agentModel, required Vector2 position})
-      : super(position: position, spriteFilenames: ["grass-01.png", "grass-02.png"]);
+      : super(
+          position: position,
+          canFlipHorizontal: true,
+          canFlipVertical: true,
+          spriteFilenames: [
+            "grass-01.png",
+            "grass-02.png",
+            "grass-03.png",
+            "grass-04.png",
+            "grass-05.png",
+            "grass-06.png",
+            "grass-07.png",
+          ],
+        );
 
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    spriteComponent?.setOpacity(0.0);
+    // spriteComponent?.setOpacity(0.0);
     await onModelChange();
   }
 
@@ -27,6 +39,9 @@ class GrassTile extends TileSquare {
     var maxEnergy = kGameConfiguration.plant.grass.maxEnergy;
     var currentEnergy = model.energy;
 
+    setTileToShow(currentEnergy, minEnergy, maxEnergy);
+
+/*
     // First, normalize currentEnergy to a value between 0 and 1
     double normalizedEnergy = (currentEnergy - minEnergy) / (maxEnergy - minEnergy);
     normalizedEnergy = clampDouble(normalizedEnergy, 0, 1);
@@ -39,5 +54,6 @@ class GrassTile extends TileSquare {
     opacityEffect!.removeOnFinish = true;
     // Apply the effect to the SpriteComponent
     await spriteComponent?.add(opacityEffect!);
+*/
   }
 }

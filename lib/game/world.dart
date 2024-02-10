@@ -170,9 +170,8 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
       assert(!_visibleModels.contains(agent));
 
       var component = agent.createVisualization();
-      await _layersMap[agent.layerId]!.add(component);
+      await (_layersMap[agent.layerId]!.add(component));
       _visibleModels.add(agent);
-      agent.visualization = component;
     }
   }
 

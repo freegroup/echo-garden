@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "assets/tiles/world.tmx",
+    "activeFile": "",
     "expandedProjectPaths": [
         ".",
         "assets/tiles",
@@ -33,7 +33,6 @@
     "map.lastUsedFormat": "tmx",
     "map.width": 40,
     "openFiles": [
-        "assets/tiles/world.tmx"
     ],
     "project": "tiled.tiled-project",
     "recentFiles": [
