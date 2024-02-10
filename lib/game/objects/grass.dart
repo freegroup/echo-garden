@@ -16,6 +16,7 @@ class GrassTile extends TileSquare {
   Future<void> onLoad() async {
     await super.onLoad();
     spriteComponent?.setOpacity(0.0);
+    await onModelChange();
   }
 
   @override

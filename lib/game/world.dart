@@ -3,7 +3,6 @@ import 'dart:ui';
 
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/actors/player.dart';
-import 'package:echo_garden/game/agent.dart';
 import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/game/layer.dart';
 import 'package:echo_garden/main.dart';
@@ -108,7 +107,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
           try {
             // Get the model for the layer at the cell
             //
-            final agentModel = gameModel.getLayer(layerId).get(cell);
+            final agentModel = gameModel.getAgentAtCell(cell, layerId);
             // check if there is a model and not already a visualization is present
             //
             if (agentModel != null && !_visibleModels.contains(agentModel)) {
@@ -163,8 +162,13 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   }
 
   Future<void> onModelAdded(AgentModel agent) async {
-    // check if the agent in the visible area an add them if yes
+    // check if the agent in the visible area.
+    //
     if (_cellToShow.containsVector2(agent.cell)) {
+      //It can't be in the "_visibleModels", because it is
+      //created right now. Assert this
+      assert(!_visibleModels.contains(agent));
+
       var component = agent.createVisualization();
       await _layersMap[agent.layerId]!.add(component);
       _visibleModels.add(agent);
@@ -173,9 +177,17 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   }
 
   Future<void> onModelRemoved(AgentModel agent) async {
+    bool hasVis = agent.visualization != null;
+
+    // is is not mandatory, that the model is in the current viewport.
+    // in this case the visualization is null...
     agent.visualization?.removeFromParent();
     agent.visualization = null;
-    _visibleModels.remove(agent);
+    // ...and not part in the _visibleModels set.
+    bool hasRemoved = _visibleModels.remove(agent);
+
+    // assert that the model was part of the _visibleModel if it has a visualization
+    assert(hasVis == hasRemoved);
   }
 
   Future<void> onModelMoved(AgentModel agent) async {

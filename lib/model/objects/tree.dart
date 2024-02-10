@@ -54,8 +54,9 @@ class TreeModel extends PlantModel {
         AgentModel? patch = gameModelRef.getAgentAtCell(cellCandidate, PatchModel.staticLayerId);
         AgentModel? plant = gameModelRef.getAgentAtCell(cellCandidate, PlantModel.staticLayerId);
         if (patch is SeedableModel && plant is! TreeModel) {
-          TreeModel(gameModelRef: gameModelRef, cell: cellCandidate);
+          // replace "anything" with the new tree
           if (plant != null) gameModelRef.remove(plant);
+          gameModelRef.add(TreeModel(gameModelRef: gameModelRef, cell: cellCandidate));
         }
       }
     }
