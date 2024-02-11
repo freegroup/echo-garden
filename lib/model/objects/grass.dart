@@ -6,8 +6,9 @@ import 'package:echo_garden/game/objects/grass.dart';
 import 'package:echo_garden/model/objects/plant.dart';
 
 class GrassModel extends PlantModel {
-  GrassModel({required super.gameModelRef, required super.cell, super.energy}) {
+  GrassModel({required super.gameModelRef, required super.cell}) {
     energy = kGameConfiguration.plant.grass.initialEnergy;
+    minEnergy = kGameConfiguration.plant.grass.minEnergy;
   }
 
   @override
@@ -20,7 +21,7 @@ class GrassModel extends PlantModel {
   }
 
   @override
-  Future<void> step() async  {
+  Future<void> step() async {
     bool changed = false;
     changed |= _grow();
 

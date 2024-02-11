@@ -22,6 +22,8 @@ dependencies:
   spritewidget: ^2.0.1
   flame: ^1.14.0
   flame_tiled: ^1.18.3
+  flutter_soloud: ^1.2.4
+  flame_audio: ^2.1.8
 
 dev_dependencies:
   flutter_test:

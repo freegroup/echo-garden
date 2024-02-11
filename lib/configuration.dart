@@ -1,7 +1,7 @@
 const kGameConfiguration = (
   tileMap: (
-    width: 50.0,
-    height: 50.0,
+    width: 150.0,
+    height: 150.0,
     tileSpriteSize: 64.0,
   ),
   world: (
@@ -13,7 +13,7 @@ const kGameConfiguration = (
   rabbit: (
     birthThreshold: 10.0,
     initEnergy: 8,
-    energyPerStep: -0.4,
+    energyPerStep: -0.8,
     stepRadius: 1,
     maxEnergyPerEat: 2.0,
     maxEnergyCanEat: 25,
@@ -26,6 +26,7 @@ const kGameConfiguration = (
     grass: (
       initialEnergy: 0.01,
       maxEnergy: 2.5,
+      minEnergy: 0.01,
       incEnergie: 0.03,
       growPercentage: 0.055,
     ),

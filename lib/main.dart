@@ -3,7 +3,9 @@ import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
 
 // Define an extension on Rect
 /*
@@ -25,14 +27,31 @@ extension RectExtension on Rect {
   }
 }
 
+SoundProps? currentSound;
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Flame.device.setLandscape();
   await Flame.device.fullScreen();
 
-  GameModel gameModel =
-      GameModel(Vector2(kGameConfiguration.tileMap.width, kGameConfiguration.tileMap.height));
-  final game = GameVisualization(gameModel: gameModel);
+/*
+  await SoLoud().startIsolate();
+  final sound = await SoloudTools.loadFromAssets("assets/audio/footstep06.ogg");
+  final handle = await SoLoud().play(sound!);
+  SoLoud().setLooping(handle.newHandle, true);
+  SoLoud().setVolume(handle.newHandle, 1.0);
+  print("Sound played, handle: ${handle.newHandle}");
+*/
+  // Preload audio assets
+  await FlameAudio.audioCache.loadAll(['footstep06.mp3']);
+  FlameAudio.play('footstep06.mp3');
+  FlameAudio.loop('footstep06.mp3', volume: .25); // Loop with volume set to 25%
+
+  GameModel model = GameModel(Vector2(
+    kGameConfiguration.tileMap.width,
+    kGameConfiguration.tileMap.height,
+  ));
+  final game = GameVisualization(gameModel: model);
   runApp(EchoGardenApp(game: game));
 }
 
