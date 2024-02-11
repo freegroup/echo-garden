@@ -22,16 +22,18 @@ class RabbitAgent extends ActorModel {
   @override
   AgentVisualization createVisualization() {
     assert(visualization == null);
-    return visualization =
-        RabbitTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
+    return visualization = RabbitTile(
+      agentModel: this,
+      position: cell * kGameConfiguration.world.tileSize,
+    );
   }
 
   @override
-  void step() {
+  Future<void> step() async {
     bool changed = false;
-    changed |= _move();
-    changed |= _eat();
-    changed |= _reproduce();
+    changed |= await _move();
+    changed |= await _eat();
+    changed |= await _reproduce();
     energy = energy + kGameConfiguration.rabbit.energyPerStep;
     if (energy < 0) {
       gameModelRef.remove(this);
@@ -43,22 +45,23 @@ class RabbitAgent extends ActorModel {
     }
   }
 
-  bool _move() {
+  Future<bool> _move() async {
     Set<Vector2> possibleMoves = strategy.getNeighborhood(
       includeCenter: true,
       emptyCellsLookup: false,
       cell: cell,
+      radius: kGameConfiguration.rabbit.stepRadius,
       layerId: SeedableModel.staticLayerId,
     );
     Vector2? newCell = pickRandomElement(possibleMoves);
     if (newCell != null) {
-      gameModelRef.move(this, newCell);
+      await gameModelRef.move(this, newCell);
       return true;
     }
     return false;
   }
 
-  bool _eat() {
+  Future<bool> _eat() async{
     AgentModel? patch = gameModelRef.getAgentAtCell(cell, PlantModel.staticLayerId);
     if (patch != null && patch is PlantModel) {
       if (patch.energy < kGameConfiguration.rabbit.maxEnergyCanEat) {
@@ -66,9 +69,9 @@ class RabbitAgent extends ActorModel {
         energy += diff;
         patch.energy -= diff;
         if (patch.energy <= 0) {
-          gameModelRef.remove(patch);
+          await gameModelRef.remove(patch);
         } else {
-          patch.visualization?.onModelChange();
+          await patch.visualization?.onModelChange();
         }
         return true;
       }
@@ -76,10 +79,10 @@ class RabbitAgent extends ActorModel {
     return false;
   }
 
-  bool _reproduce() {
+  Future<bool> _reproduce() async {
     if (energy > birthThreshold) {
       energy /= 2;
-      gameModelRef.add(RabbitAgent(gameModelRef: gameModelRef, cell: cell, energy: energy));
+      await gameModelRef.add(RabbitAgent(gameModelRef: gameModelRef, cell: cell, energy: energy));
       return true;
     }
     return false;

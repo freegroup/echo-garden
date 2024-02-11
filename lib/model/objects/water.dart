@@ -9,10 +9,12 @@ class WaterModel extends PatchModel {
   @override
   AgentVisualization createVisualization() {
     assert(visualization == null);
-
-    return visualization= WaterTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
+    return visualization = WaterTile(
+      agentModel: this,
+      position: cell * kGameConfiguration.world.tileSize,
+    );
   }
 
   @override
-  void step() {}
+ Future<void> step() async {}
 }

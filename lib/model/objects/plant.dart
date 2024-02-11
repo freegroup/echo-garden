@@ -9,5 +9,5 @@ abstract class PlantModel extends AgentModel {
   String get layerId => PlantModel.staticLayerId;
 
   @override
-  void step() {}
+  Future<void> step() async {}
 }

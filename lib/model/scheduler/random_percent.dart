@@ -10,7 +10,7 @@ class RandomPercentScheduler extends BaseScheduler {
   RandomPercentScheduler({required this.percent, required super.gameModelRef});
 
   @override
-  void step() {
+  Future<void> step() async {
     // Convert percent to a fraction and calculate the number of agents to step
     final int agentsToStep = (agents.length * (percent / 100.0)).round();
 
@@ -19,7 +19,7 @@ class RandomPercentScheduler extends BaseScheduler {
 
     // Pick the first 'agentsToStep' agents from the shuffled list and step through them
     for (AgentModel agent in shuffledAgents.take(agentsToStep)) {
-      agent.step();
+      await agent.step();
     }
   }
 }

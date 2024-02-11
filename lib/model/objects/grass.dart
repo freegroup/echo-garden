@@ -13,13 +13,14 @@ class GrassModel extends PlantModel {
   @override
   AgentVisualization createVisualization() {
     assert(visualization == null);
-
-    return visualization =
-        GrassTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
+    return visualization = GrassTile(
+      agentModel: this,
+      position: cell * kGameConfiguration.world.tileSize,
+    );
   }
 
   @override
-  void step() async {
+  Future<void> step() async  {
     bool changed = false;
     changed |= _grow();
 

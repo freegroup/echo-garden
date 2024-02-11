@@ -22,8 +22,8 @@ class GrowingTileSquare extends AgentVisualization with HasGameReference<GameVis
     required this.spriteFilenames, // Now expects a list of filenames
     super.anchor = Anchor.topLeft,
     required super.position,
-    this.canFlipHorizontal = false,
-    this.canFlipVertical = true,
+    this.canFlipHorizontal = true,
+    this.canFlipVertical = false,
   }) : super(
           size: Vector2.all(kGameConfiguration.world.tileSize),
         ) {
@@ -62,6 +62,6 @@ class GrowingTileSquare extends AgentVisualization with HasGameReference<GameVis
     currentSelectedSpriteIndex = index;
     spriteComponent?.sprite = sprites[currentSelectedSpriteIndex];
     if (canFlipHorizontal && Random().nextBool()) spriteComponent?.flipHorizontallyAroundCenter();
-    if (canFlipVertical && Random().nextBool()) spriteComponent?.flipVertically();
+    if (canFlipVertical && Random().nextBool()) spriteComponent?.flipVerticallyAroundCenter();
   }
 }

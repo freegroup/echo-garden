@@ -9,8 +9,9 @@ class BeachModel extends PatchModel {
   @override
   AgentVisualization createVisualization() {
     assert(visualization == null);
-
-    return visualization =
-        BeachTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
+    return visualization = BeachTile(
+      agentModel: this,
+      position: cell * kGameConfiguration.world.tileSize,
+    );
   }
 }

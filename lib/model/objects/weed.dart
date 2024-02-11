@@ -11,11 +11,12 @@ class WeedModel extends PlantModel {
   @override
   AgentVisualization createVisualization() {
     assert(visualization == null);
-
-    return visualization =
-        WeedTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
+    return visualization = WeedTile(
+      agentModel: this,
+      position: cell * kGameConfiguration.world.tileSize,
+    );
   }
 
   @override
-  void step() {}
+ Future<void> step() async {}
 }

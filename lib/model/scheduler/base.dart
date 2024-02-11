@@ -26,10 +26,10 @@ class BaseScheduler {
     assert(found);
   }
 
-  void step() {
+ Future<void> step() async {
     List<AgentModel> numbersList = agents.toList();
     for (AgentModel agent in numbersList) {
-      agent.step();
+      await agent.step();
     }
   }
 }

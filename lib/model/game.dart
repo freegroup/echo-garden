@@ -107,7 +107,7 @@ class GameModel {
     }
   }
 
-  void add(AgentModel agent) async {
+  Future<void> add(AgentModel agent) async {
     layersMap[agent.layerId]?.add(agent.cell, agent);
     if (agent is RabbitAgent) {
       _rabbitScheduler.add(agent);
@@ -117,7 +117,7 @@ class GameModel {
     await gameVisualization?.onModelAdded(agent);
   }
 
-  void remove(AgentModel agent) async {
+  Future<void> remove(AgentModel agent) async {
     if (agent is RabbitAgent) {
       _rabbitScheduler.remove(agent);
     } else {
@@ -127,7 +127,7 @@ class GameModel {
     await gameVisualization?.onModelRemoved(agent);
   }
 
-  void move(AgentModel agent, Vector2 newCell) async {
+  Future<void> move(AgentModel agent, Vector2 newCell) async {
     layersMap[agent.layerId]?.move(agent, newCell);
     agent.cell = newCell;
     await gameVisualization?.onModelMoved(agent);
@@ -148,13 +148,13 @@ class GameModel {
     return layersMap[layerId]!;
   }
 
-  void step() {
-    _defaultScheduler.step();
-    _rabbitScheduler.step();
-    _grow();
+  Future<void> step() async {
+    await _defaultScheduler.step();
+    await _rabbitScheduler.step();
+    await _grow();
   }
 
-  void _grow() {
+  Future<void> _grow() async {
     var stopwatch = Stopwatch()..start();
 
     // Define the total number of agents to place for each type
@@ -164,7 +164,7 @@ class GameModel {
     int totalFlower = (area * kGameConfiguration.plant.flower.growPercentage).toInt();
     int totalTree = (area * kGameConfiguration.plant.tree.growPercentage).toInt();
 
-    void placePlants(int total, Function(Vector2) placeFunction, {int radius = 1}) {
+    Future<void> placePlants(int total, Function(Vector2) placeFunction, {int radius = 1}) async {
       final random = Random();
       for (int i = 0; i < total; i++) {
         bool placed = false;
@@ -187,7 +187,7 @@ class GameModel {
               // check that in this cell is not already a plant...first comes, first serves.
               //
               if (getAgentAtCell(newCell, PlantModel.staticLayerId) == null) {
-                placeFunction(newCell);
+                await placeFunction(newCell);
                 placed = true;
               }
             }
@@ -196,10 +196,22 @@ class GameModel {
       }
     }
 
-    placePlants(totalGrass, (cell) => add(GrassModel(gameModelRef: this, cell: cell)));
-    placePlants(totalWeed, (cell) => add(WeedModel(gameModelRef: this, cell: cell)));
-    placePlants(totalFlower, (cell) => add(FlowerModel(gameModelRef: this, cell: cell)));
-    placePlants(totalTree, (cell) => add(TreeModel(gameModelRef: this, cell: cell)));
+    await placePlants(
+      totalGrass,
+      (cell) async => await add(GrassModel(gameModelRef: this, cell: cell)),
+    );
+    await placePlants(
+      totalWeed,
+      (cell) async => await add(WeedModel(gameModelRef: this, cell: cell)),
+    );
+    await placePlants(
+      totalFlower,
+      (cell) async => await add(FlowerModel(gameModelRef: this, cell: cell)),
+    );
+    await placePlants(
+      totalTree,
+      (cell) async => await add(TreeModel(gameModelRef: this, cell: cell)),
+    );
 
     // Stop the stopwatch
     stopwatch.stop();

@@ -27,7 +27,7 @@ class EmberPlayer extends SpriteAnimationComponent
   }
 
   @override
-  void update(double dt) {
+  void update(double dt) async {
     position += velocity * dt;
 
     Vector2 cellPlayer = (position / kGameConfiguration.world.tileSize)..floor();
@@ -42,7 +42,7 @@ class EmberPlayer extends SpriteAnimationComponent
       kGameConfiguration.world.visibleTileRadius,
     );
     // center the rect around the player
-    game.world.cellsToShow = cellsAroundPlayer;
+    await game.world.setCellsToShow(cellsAroundPlayer);
     super.update(dt);
   }
 

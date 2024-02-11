@@ -13,12 +13,14 @@ class FlowerModel extends PlantModel {
   @override
   AgentVisualization createVisualization() {
     assert(visualization == null);
-    return visualization =
-        FlowerTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
+    return visualization = FlowerTile(
+      agentModel: this,
+      position: cell * kGameConfiguration.world.tileSize,
+    );
   }
 
   @override
-  void step() {
+  Future<void> step() async  {
     var oldEnergy = energy;
     _grow();
 

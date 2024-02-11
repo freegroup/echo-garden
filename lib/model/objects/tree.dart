@@ -30,15 +30,15 @@ class TreeModel extends PlantModel {
   }
 
   @override
-  void step() {
+  Future<void> step() async {
     bool changed = false;
-    changed |= _grow();
-    changed |= _seed();
+    changed |= await _grow();
+    changed |= await _seed();
 
     if (changed) visualization?.onModelChange();
   }
 
-  bool _grow() {
+  Future<bool> _grow() async {
     if (energy >= kGameConfiguration.plant.tree.maxEnergy) {
       return false;
     }
@@ -49,7 +49,7 @@ class TreeModel extends PlantModel {
     return true;
   }
 
-  bool _seed() {
+  Future<bool> _seed() async {
     var percentage = Random().nextInt(100).toDouble() / 100;
     if (percentage > kGameConfiguration.plant.tree.seedPercentage) {
       return false;
@@ -69,7 +69,7 @@ class TreeModel extends PlantModel {
         if (patch is SeedableModel && plant is! TreeModel) {
           // replace "anything" with the new tree
           if (plant != null) gameModelRef.remove(plant);
-          gameModelRef.add(TreeModel(gameModelRef: gameModelRef, cell: cellCandidate));
+          await gameModelRef.add(TreeModel(gameModelRef: gameModelRef, cell: cellCandidate));
           return true;
         }
       }

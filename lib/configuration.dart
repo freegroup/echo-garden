@@ -11,10 +11,11 @@ const kGameConfiguration = (
     waterPercentage: 50.0,
   ),
   rabbit: (
-    birthThreshold: 15.0,
-    initEnergy: 5,
+    birthThreshold: 10.0,
+    initEnergy: 8,
     energyPerStep: -0.4,
-    maxEnergyPerEat: 0.6,
+    stepRadius: 1,
+    maxEnergyPerEat: 2.0,
     maxEnergyCanEat: 25,
   ),
   plant: (
@@ -24,8 +25,8 @@ const kGameConfiguration = (
     ),
     grass: (
       initialEnergy: 0.01,
-      maxEnergy: 1.5,
-      incEnergie: 0.05,
+      maxEnergy: 2.5,
+      incEnergie: 0.03,
       growPercentage: 0.055,
     ),
     flower: (

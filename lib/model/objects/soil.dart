@@ -8,11 +8,13 @@ class SoilModel extends SeedableModel {
 
   @override
   AgentVisualization createVisualization() {
-        assert(visualization == null);
-
-    return visualization= SoilTile(agentModel: this, position: cell * kGameConfiguration.world.tileSize);
+    assert(visualization == null);
+    return visualization = SoilTile(
+      agentModel: this,
+      position: cell * kGameConfiguration.world.tileSize,
+    );
   }
 
   @override
-  void step() {}
+ Future<void> step() async  {}
 }

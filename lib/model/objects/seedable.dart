@@ -9,5 +9,5 @@ class SeedableModel extends PatchModel {
   String get layerId => SeedableModel.staticLayerId;
 
   @override
-  void step() {}
+ Future<void> step() async {}
 }

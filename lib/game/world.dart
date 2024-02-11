@@ -44,7 +44,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     }
   }
 
-  set cellsToShow(Rect cells) {
+  Future<void> setCellsToShow(Rect cells) async {
     final stopwatch = Stopwatch()..start();
 
     double radius = kGameConfiguration.world.visibleTileRadius;
@@ -101,24 +101,24 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
         // Convert grid indices to Vector2 for compatibility with the rest of your code
         Vector2 cell = Vector2(x.toDouble(), y.toDouble());
 
-        // Fill up all visualization layers with the corresponding Model representation
+        // Fill up all visualization layers with the corresponding Model representations
         //
-        _layersMap.forEach((layerId, visualizationLayer) async {
+        for (var entry in _layersMap.entries) {
+          final layerId = entry.key;
+          final layer = entry.value;
+
           try {
             // Get the model for the layer at the cell
-            //
             final agentModel = gameModel.getAgentAtCell(cell, layerId);
-            // check if there is a model and not already a visualization is present
-            //
+            // Check if there is a model and not already a visualization is present
             if (agentModel != null && !_visibleModels.contains(agentModel)) {
-              agentModel.createVisualization();
-              await visualizationLayer.add(agentModel.visualization!);
+              await layer.add(agentModel.createVisualization());
               _visibleModels.add(agentModel);
             }
           } catch (e) {
             print(e);
           }
-        });
+        }
       }
     }
 
@@ -136,12 +136,12 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     addAll([..._layersMap.values, _player]);
 
     gameRef.cameraComponent.follow(_player);
-    cellsToShow = Rect.fromLTWH(
+    await setCellsToShow(Rect.fromLTWH(
       0,
       0,
       kGameConfiguration.world.visibleTileRadius,
       kGameConfiguration.world.visibleTileRadius,
-    );
+    ));
   }
 
   @override
@@ -168,9 +168,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
       //It can't be in the "_visibleModels", because it is
       //created right now. Assert this
       assert(!_visibleModels.contains(agent));
-
-      var component = agent.createVisualization();
-      await (_layersMap[agent.layerId]!.add(component));
+      await (_layersMap[agent.layerId]!.add(agent.createVisualization()));
       _visibleModels.add(agent);
     }
   }
