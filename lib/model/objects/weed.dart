@@ -18,5 +18,21 @@ class WeedModel extends PlantModel {
   }
 
   @override
- Future<void> step() async {}
+  Future<void> step() async {
+    bool changed = false;
+    changed |= _grow();
+    if (changed && visualization != null) await visualization!.onModelChange();
+
+    if (energy <= 0) {
+      gameModelRef.remove(this);
+    }
+  }
+
+  bool _grow() {
+    return super.grow(
+      kGameConfiguration.plant.flower.growEnergy,
+      kGameConfiguration.plant.flower.maxEnergy,
+      kGameConfiguration.plant.flower.requiresMinWaterLevel,
+    );
+  }
 }

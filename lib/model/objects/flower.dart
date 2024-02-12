@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/agent.dart';
 import 'package:echo_garden/game/objects/flower.dart';
@@ -20,19 +18,22 @@ class FlowerModel extends PlantModel {
   }
 
   @override
-  Future<void> step() async  {
-    var oldEnergy = energy;
-    _grow();
+  Future<void> step() async {
+    var changed = false;
+    changed |= _grow();
 
-    if (oldEnergy != energy) {
-      visualization?.onModelChange();
+    if (changed) await visualization?.onModelChange();
+
+    if (energy <= 0) {
+      gameModelRef.remove(this);
     }
   }
 
-  _grow() {
-    energy = min(
+  bool _grow() {
+    return super.grow(
+      kGameConfiguration.plant.flower.growEnergy,
       kGameConfiguration.plant.flower.maxEnergy,
-      energy + kGameConfiguration.plant.flower.incEnergie,
+      kGameConfiguration.plant.flower.requiresMinWaterLevel,
     );
   }
 }

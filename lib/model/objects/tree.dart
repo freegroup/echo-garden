@@ -3,13 +3,11 @@ import 'dart:math';
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/agent.dart';
 import 'package:echo_garden/game/objects/tree.dart';
-
 import 'package:echo_garden/model/agent.dart';
-import 'package:echo_garden/model/objects/patch.dart';
 import 'package:echo_garden/model/objects/plant.dart';
 import 'package:echo_garden/model/objects/seedable.dart';
-import 'package:echo_garden/utils/random.dart';
 import 'package:echo_garden/strategy/base.dart';
+import 'package:echo_garden/utils/random.dart';
 import 'package:flame/components.dart';
 
 class TreeModel extends PlantModel {
@@ -32,21 +30,22 @@ class TreeModel extends PlantModel {
   @override
   Future<void> step() async {
     bool changed = false;
-    changed |= await _grow();
+    changed |= _grow();
     changed |= await _seed();
 
     if (changed) visualization?.onModelChange();
+
+    if (energy <= 0) {
+      gameModelRef.remove(this);
+    }
   }
 
-  Future<bool> _grow() async {
-    if (energy >= kGameConfiguration.plant.tree.maxEnergy) {
-      return false;
-    }
-    energy = min(
+  bool _grow() {
+    return super.grow(
+      kGameConfiguration.plant.tree.growEnergy,
       kGameConfiguration.plant.tree.maxEnergy,
-      energy + kGameConfiguration.plant.tree.growEnergy,
+      kGameConfiguration.plant.tree.requiresMinWaterLevel,
     );
-    return true;
   }
 
   Future<bool> _seed() async {
@@ -67,10 +66,12 @@ class TreeModel extends PlantModel {
         AgentModel? plant = gameModelRef.getAgentAtCell(cellCandidate, PlantModel.staticLayerId);
 
         if (patch is SeedableModel && plant is! TreeModel) {
-          // replace "anything" with the new tree
-          if (plant != null) gameModelRef.remove(plant);
-          await gameModelRef.add(TreeModel(gameModelRef: gameModelRef, cell: cellCandidate));
-          return true;
+          if (patch.energy > kGameConfiguration.plant.tree.requiresMinWaterLevel) {
+            // replace "anything" with the new tree
+            if (plant != null) gameModelRef.remove(plant);
+            await gameModelRef.add(TreeModel(gameModelRef: gameModelRef, cell: cellCandidate));
+            return true;
+          }
         }
       }
     }

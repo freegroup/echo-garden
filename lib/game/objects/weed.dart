@@ -5,6 +5,6 @@ class WeedTile extends TileSquare {
   WeedTile({required super.agentModel, required Vector2 position})
       : super(
           position: position,
-          spriteFilenames: ["fir-01.png", "fir-02.png"],
+          spriteFilenames: ["weed-07.png"],
         );
 }

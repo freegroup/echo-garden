@@ -61,11 +61,23 @@ class EmberPlayer extends SpriteAnimationComponent
     // center the rect around the player
     game.world.setCellsToShow(cellsAroundPlayer);
 
-    adjustNearestSound(cellPlayer, PatchModel.staticLayerId, BeachModel, Sound.ocean);
+    adjustNearestSound(
+      cellPlayer,
+      PatchModel.staticLayerId,
+      BeachModel,
+      Sound.ocean,
+    );
+
     double maxPossibleEnergy =
         kGameConfiguration.plant.tree.maxEnergy * (_maxRadiusTiles * _maxRadiusTiles - 1);
     adjustAggregatedSound(
-        cellPlayer, PlantModel.staticLayerId, TreeModel, 200, maxPossibleEnergy, Sound.blackForest);
+      cellPlayer,
+      PlantModel.staticLayerId,
+      TreeModel,
+      200,
+      maxPossibleEnergy,
+      Sound.blackForest,
+    );
 
     super.update(dt);
   }

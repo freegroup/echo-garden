@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/agent.dart';
 import 'package:echo_garden/game/objects/grass.dart';
@@ -24,18 +22,18 @@ class GrassModel extends PlantModel {
   Future<void> step() async {
     bool changed = false;
     changed |= _grow();
-
     if (changed && visualization != null) await visualization!.onModelChange();
+
+    if (energy <= 0) {
+      gameModelRef.remove(this);
+    }
   }
 
   bool _grow() {
-    if (energy >= kGameConfiguration.plant.grass.maxEnergy) {
-      return false;
-    }
-    energy = min(
+    return super.grow(
+      kGameConfiguration.plant.grass.growEnergy,
       kGameConfiguration.plant.grass.maxEnergy,
-      energy + kGameConfiguration.plant.grass.incEnergie,
+      kGameConfiguration.plant.grass.requiresMinWaterLevel,
     );
-    return true;
   }
 }

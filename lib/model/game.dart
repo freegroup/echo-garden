@@ -164,7 +164,11 @@ class GameModel {
     int totalFlower = (area * kGameConfiguration.plant.flower.growPercentage).toInt();
     int totalTree = (area * kGameConfiguration.plant.tree.growPercentage).toInt();
 
-    Future<void> placePlants(int total, Function(Vector2) placeFunction, {int radius = 1}) async {
+    Future<void> placePlants(
+        {required Function(Vector2) placeFunction,
+        required int total,
+        int radius = 1,
+        required double minWaterEnergyLevel}) async {
       final random = Random();
       for (int i = 0; i < total; i++) {
         bool placed = false;
@@ -183,10 +187,12 @@ class GameModel {
 
             // it is only possible to place "plants" on a seedable area
             //
-            if (getAgentAtCell(newCell, SeedableModel.staticLayerId) != null) {
+            AgentModel? patch = getAgentAtCell(newCell, SeedableModel.staticLayerId);
+            if (patch is SeedableModel) {
               // check that in this cell is not already a plant...first comes, first serves.
-              //
-              if (getAgentAtCell(newCell, PlantModel.staticLayerId) == null) {
+              // ..and that the patch has enough water to seed.
+              if (patch.energy > minWaterEnergyLevel &&
+                  getAgentAtCell(newCell, PlantModel.staticLayerId) == null) {
                 await placeFunction(newCell);
                 placed = true;
               }
@@ -197,13 +203,25 @@ class GameModel {
     }
 
     await placePlants(
-        totalGrass, (cell) async => await add(GrassModel(gameModelRef: this, cell: cell)));
+      total: totalGrass,
+      minWaterEnergyLevel: kGameConfiguration.plant.grass.requiresMinWaterLevel,
+      placeFunction: (cell) async => await add(GrassModel(gameModelRef: this, cell: cell)),
+    );
     await placePlants(
-        totalWeed, (cell) async => await add(WeedModel(gameModelRef: this, cell: cell)));
+      total: totalWeed,
+      minWaterEnergyLevel: kGameConfiguration.plant.weed.requiresMinWaterLevel,
+      placeFunction: (cell) async => await add(WeedModel(gameModelRef: this, cell: cell)),
+    );
     await placePlants(
-        totalFlower, (cell) async => await add(FlowerModel(gameModelRef: this, cell: cell)));
+      total: totalFlower,
+      minWaterEnergyLevel: kGameConfiguration.plant.flower.requiresMinWaterLevel,
+      placeFunction: (cell) async => await add(FlowerModel(gameModelRef: this, cell: cell)),
+    );
     await placePlants(
-        totalTree, (cell) async => await add(TreeModel(gameModelRef: this, cell: cell)));
+      total: totalTree,
+      minWaterEnergyLevel: kGameConfiguration.plant.tree.requiresMinWaterLevel,
+      placeFunction: (cell) async => await add(TreeModel(gameModelRef: this, cell: cell)),
+    );
 
     // Stop the stopwatch
     stopwatch.stop();
