@@ -4,7 +4,7 @@ import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/agent.dart';
 import 'package:echo_garden/game/objects/rabbit.dart';
 import 'package:echo_garden/model/index.dart';
-import 'package:echo_garden/model/strategy/base.dart';
+import 'package:echo_garden/strategy/base.dart';
 import 'package:echo_garden/utils/random.dart';
 import 'package:flame/components.dart';
 

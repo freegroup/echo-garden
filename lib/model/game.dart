@@ -8,7 +8,7 @@ import 'package:echo_garden/model/objects/beach.dart';
 import 'package:echo_garden/model/objects/flat_water.dart';
 import 'package:echo_garden/model/scheduler/base.dart';
 import 'package:echo_garden/model/scheduler/random_percent.dart';
-import 'package:echo_garden/model/strategy/base.dart';
+import 'package:echo_garden/strategy/base.dart';
 import 'package:echo_garden/model/terraformer/diamond_square.dart';
 import 'package:flame/game.dart';
 
@@ -197,21 +197,13 @@ class GameModel {
     }
 
     await placePlants(
-      totalGrass,
-      (cell) async => await add(GrassModel(gameModelRef: this, cell: cell)),
-    );
+        totalGrass, (cell) async => await add(GrassModel(gameModelRef: this, cell: cell)));
     await placePlants(
-      totalWeed,
-      (cell) async => await add(WeedModel(gameModelRef: this, cell: cell)),
-    );
+        totalWeed, (cell) async => await add(WeedModel(gameModelRef: this, cell: cell)));
     await placePlants(
-      totalFlower,
-      (cell) async => await add(FlowerModel(gameModelRef: this, cell: cell)),
-    );
+        totalFlower, (cell) async => await add(FlowerModel(gameModelRef: this, cell: cell)));
     await placePlants(
-      totalTree,
-      (cell) async => await add(TreeModel(gameModelRef: this, cell: cell)),
-    );
+        totalTree, (cell) async => await add(TreeModel(gameModelRef: this, cell: cell)));
 
     // Stop the stopwatch
     stopwatch.stop();

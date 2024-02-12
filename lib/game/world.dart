@@ -7,6 +7,8 @@ import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/game/layer.dart';
 import 'package:echo_garden/main.dart';
 import 'package:echo_garden/model/index.dart';
+import 'package:echo_garden/game/sound_env.dart';
+import 'package:echo_garden/strategy/base.dart';
 import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +18,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   late EmberPlayer _player;
   late Vector2 _canvasSize;
   late Vector2 _modelSize;
+
   final Set<AgentModel> _visibleModels = <AgentModel>{};
   double _elapsedTime = 0.0;
   final double _updateInterval = 1.3; // 100 milliseconds
@@ -26,12 +29,27 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   WorldVisualization({required this.gameModel, super.children}) {
     _modelSize = Vector2(kGameConfiguration.tileMap.width, kGameConfiguration.tileMap.width);
     _canvasSize = _modelSize * kGameConfiguration.world.tileSize;
+
     _layersMap = {
       PatchModel.staticLayerId: TileLayer(priority: 0),
       SeedableModel.staticLayerId: TileLayer(priority: 1),
       PlantModel.staticLayerId: TileLayer(priority: 2),
       ActorModel.staticLayerId: TileLayer(priority: 3),
     };
+  }
+
+  @override
+  Future<void> onLoad() async {
+    _player = EmberPlayer(gameModel: gameModel, position: _canvasSize / 2);
+    addAll([..._layersMap.values, _player]);
+
+    gameRef.cameraComponent.follow(_player);
+    setCellsToShow(Rect.fromLTWH(
+      0,
+      0,
+      kGameConfiguration.world.visibleTileRadius,
+      kGameConfiguration.world.visibleTileRadius,
+    ));
   }
 
   @override
@@ -44,7 +62,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     }
   }
 
-  Future<void> setCellsToShow(Rect cells) async {
+  void setCellsToShow(Rect cells) {
     final stopwatch = Stopwatch()..start();
 
     double radius = kGameConfiguration.world.visibleTileRadius;
@@ -112,7 +130,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
             final agentModel = gameModel.getAgentAtCell(cell, layerId);
             // Check if there is a model and not already a visualization is present
             if (agentModel != null && !_visibleModels.contains(agentModel)) {
-              await layer.add(agentModel.createVisualization());
+              layer.add(agentModel.createVisualization());
               _visibleModels.add(agentModel);
             }
           } catch (e) {
@@ -127,21 +145,6 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
 
     stopwatch.stop();
     print('Total operation time: ${stopwatch.elapsedMilliseconds}ms');
-  }
-
-  @override
-  Future<void> onLoad() async {
-    _player = EmberPlayer(position: Vector2(10, 10));
-
-    addAll([..._layersMap.values, _player]);
-
-    gameRef.cameraComponent.follow(_player);
-    await setCellsToShow(Rect.fromLTWH(
-      0,
-      0,
-      kGameConfiguration.world.visibleTileRadius,
-      kGameConfiguration.world.visibleTileRadius,
-    ));
   }
 
   @override

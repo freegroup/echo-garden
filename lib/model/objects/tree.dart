@@ -9,7 +9,7 @@ import 'package:echo_garden/model/objects/patch.dart';
 import 'package:echo_garden/model/objects/plant.dart';
 import 'package:echo_garden/model/objects/seedable.dart';
 import 'package:echo_garden/utils/random.dart';
-import 'package:echo_garden/model/strategy/base.dart';
+import 'package:echo_garden/strategy/base.dart';
 import 'package:flame/components.dart';
 
 class TreeModel extends PlantModel {

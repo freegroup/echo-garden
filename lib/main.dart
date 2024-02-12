@@ -1,9 +1,11 @@
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/model/index.dart';
+import 'package:echo_garden/game/sound_env.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flame_audio/flame_audio.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
@@ -34,18 +36,7 @@ Future<void> main() async {
   await Flame.device.setLandscape();
   await Flame.device.fullScreen();
 
-/*
-  await SoLoud().startIsolate();
-  final sound = await SoloudTools.loadFromAssets("assets/audio/footstep06.ogg");
-  final handle = await SoLoud().play(sound!);
-  SoLoud().setLooping(handle.newHandle, true);
-  SoLoud().setVolume(handle.newHandle, 1.0);
-  print("Sound played, handle: ${handle.newHandle}");
-*/
-  // Preload audio assets
-  await FlameAudio.audioCache.loadAll(['footstep06.mp3']);
-  FlameAudio.play('footstep06.mp3');
-  FlameAudio.loop('footstep06.mp3', volume: .25); // Loop with volume set to 25%
+  await SoundEnvironment.init();
 
   GameModel model = GameModel(Vector2(
     kGameConfiguration.tileMap.width,
