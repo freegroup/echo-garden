@@ -1,26 +1,30 @@
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/game.dart';
+import 'package:echo_garden/game/sound_env.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/objects/beach.dart';
-import 'package:echo_garden/game/sound_env.dart';
 import 'package:echo_garden/strategy/base.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/services.dart';
+import 'package:vibration/vibration.dart';
 
 // Update the sound based on proximity to the nearest BeachModel within a maximum radius.
-int _maxRadiusTiles = 6;
+int _maxRadiusTiles = 7;
 double _tileSize = kGameConfiguration.world.tileSize;
 double _maxRadiusPixel = _maxRadiusTiles * _tileSize;
 Vector2 _halfTile = Vector2.all(_tileSize / 2.0); // Calculate once and reuse
 
-class EmberPlayer extends SpriteAnimationComponent
+class JoystickPlayer extends SpriteAnimationComponent
     with HasGameReference<GameVisualization>, KeyboardHandler {
   late final Vector2 velocity;
   final double runSpeed = 250.0;
   late MovementStrategy _strategy;
+  final JoystickComponent joystick;
 
-  EmberPlayer({
+  final Vector2 oldPosition = Vector2.all(0);
+  JoystickPlayer({
     required super.position,
+    required this.joystick,
     required GameModel gameModel,
   }) : super(size: Vector2.all(kGameConfiguration.world.tileSize), anchor: Anchor.center) {
     velocity = Vector2(0, 0);
@@ -40,13 +44,32 @@ class EmberPlayer extends SpriteAnimationComponent
     );
   }
 
+  void schritteVibration() async {
+    bool? canVibrate = await Vibration.hasVibrator();
+    if (canVibrate != null && canVibrate) {
+      // Erzeuge eine sanfte Vibration
+      // Die Dauer der Vibration ist in Millisekunden.
+      // Für sanfte Schritte könntest du kurze Vibrationen mit Pausen dazwischen verwenden.
+      Vibration.vibrate(duration: 10, amplitude: 20);
+    }
+  }
+
   @override
   void update(double dt) {
+    // https://github.com/flame-engine/flame/blob/main/examples/lib/stories/input/joystick_player.dart
+    velocity.x = joystick.relativeDelta.x * runSpeed;
+    velocity.y = joystick.relativeDelta.y * runSpeed;
+
     if (velocity.isZero()) {
       return;
     }
-    position += velocity * dt;
 
+    position += velocity * dt;
+    if (position.distanceTo(oldPosition) > 80) {
+      schritteVibration();
+      oldPosition.x = position.x;
+      oldPosition.y = position.y;
+    }
     Vector2 cellPlayer = (position / kGameConfiguration.world.tileSize)..floor();
 
     double alignedStartX = cellPlayer.x - kGameConfiguration.world.visibleTileRadius ~/ 2;

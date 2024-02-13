@@ -1,3 +1,7 @@
+import 'package:flame/components.dart';
+
+final Vector2 screenSize = Vector2.all(100);
+
 const kGameConfiguration = (
   tileMap: (
     width: 150.0,
@@ -6,7 +10,7 @@ const kGameConfiguration = (
   ),
   world: (
     tileSize: 32.0,
-    visibleTileRadius: 60.0,
+    visibleTileRadius: 28.0,
     tileSnap: 1.0,
     waterPercentage: 50.0,
   ),

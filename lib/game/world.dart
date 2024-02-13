@@ -2,20 +2,17 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/game/actors/player.dart';
 import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/game/layer.dart';
 import 'package:echo_garden/main.dart';
 import 'package:echo_garden/model/index.dart';
-import 'package:echo_garden/game/sound_env.dart';
-import 'package:echo_garden/strategy/base.dart';
 import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
 import 'package:flutter/material.dart';
 
 class WorldVisualization extends World with HasGameRef<GameVisualization> {
   final GameModel gameModel;
-  late EmberPlayer _player;
+
   late Vector2 _canvasSize;
   late Vector2 _modelSize;
 
@@ -26,7 +23,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   Rect _cellToShow = const Rect.fromLTWH(0, 0, 0, 0);
   late Map<String, TileLayer> _layersMap;
 
-  WorldVisualization({required this.gameModel, super.children}) {
+  WorldVisualization({required this.gameModel}) {
     _modelSize = Vector2(kGameConfiguration.tileMap.width, kGameConfiguration.tileMap.width);
     _canvasSize = _modelSize * kGameConfiguration.world.tileSize;
 
@@ -40,10 +37,8 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
 
   @override
   Future<void> onLoad() async {
-    _player = EmberPlayer(gameModel: gameModel, position: _canvasSize / 2);
-    addAll([..._layersMap.values, _player]);
+    addAll([..._layersMap.values]);
 
-    gameRef.cameraComponent.follow(_player);
     setCellsToShow(Rect.fromLTWH(
       0,
       0,

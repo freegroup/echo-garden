@@ -43,7 +43,7 @@ class SoundEnvironment {
       } else {
         var file = _soundFiles[sound];
         if (file != null) {
-          _audioPlayers[sound] = FlameAudio.loop(file, volume: volume);
+          _audioPlayers[sound] = FlameAudio.loopLongAudio(file, volume: volume);
         }
       }
     } on Exception catch (e) {

@@ -1,22 +1,12 @@
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/game.dart';
-import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/game/sound_env.dart';
+import 'package:echo_garden/model/index.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
-import 'package:flame_audio/flame_audio.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
-// Define an extension on Rect
-/*
-extension RectExtension on Rect {
-  bool containsVector2(Vector2 vector) {
-    return contains(Offset(vector.x, vector.y));
-  }
-}
-*/
 extension RectExtension on Rect {
   bool containsVector2(Vector2 vector) {
     // Adjust the condition to include the right and bottom edges
@@ -34,7 +24,7 @@ SoundProps? currentSound;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Flame.device.setLandscape();
-  await Flame.device.fullScreen();
+  //await Flame.device.fullScreen();
 
   await SoundEnvironment.init();
 
@@ -53,6 +43,9 @@ class EchoGardenApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    screenSize.x = MediaQuery.of(context).size.width;
+    screenSize.y = MediaQuery.of(context).size.height;
+
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(

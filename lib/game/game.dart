@@ -1,21 +1,43 @@
+import 'package:echo_garden/configuration.dart';
+import 'package:echo_garden/game/actors/player.dart';
 import 'package:echo_garden/game/world.dart';
 import 'package:echo_garden/model/agent.dart';
 import 'package:echo_garden/model/game.dart';
-import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
+import 'package:flame/palette.dart';
+import 'package:flutter/material.dart';
 
 class GameVisualization extends FlameGame with HasKeyboardHandlerComponents {
   late final CameraComponent cameraComponent;
 
   @override
   final WorldVisualization world;
+  late final JoystickComponent joystick;
+  late final JoystickPlayer player;
 
   GameVisualization({required GameModel gameModel})
       : world = WorldVisualization(gameModel: gameModel) {
+    var modelSize = Vector2(kGameConfiguration.tileMap.width, kGameConfiguration.tileMap.width);
+    var canvasSize = modelSize * kGameConfiguration.world.tileSize;
+
     cameraComponent = CameraComponent(world: world);
     gameModel.gameVisualization = this;
+
+    final knobPaint = BasicPalette.darkGreen.withAlpha(100).paint();
+    final backgroundPaint = BasicPalette.green.withAlpha(30).paint();
+    joystick = JoystickComponent(
+      knob: CircleComponent(radius: 30, paint: knobPaint),
+      background: CircleComponent(radius: 100, paint: backgroundPaint),
+      margin: const EdgeInsets.only(right: 40, bottom: 40),
+    );
+    player = JoystickPlayer(gameModel: gameModel, position: canvasSize / 2, joystick: joystick);
+
+    world.add(player);
+    cameraComponent.viewport.add(joystick);
+
+    cameraComponent.follow(player);
   }
 
   @override
