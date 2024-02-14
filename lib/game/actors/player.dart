@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/game/sound_env.dart';
@@ -5,6 +7,7 @@ import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/objects/beach.dart';
 import 'package:echo_garden/strategy/base.dart';
 import 'package:flame/components.dart';
+import 'package:flame/sprite.dart';
 import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 
@@ -19,12 +22,19 @@ class JoystickPlayer extends SpriteAnimationComponent
   late final Vector2 velocity;
   final double runSpeed = 250.0;
   late MovementStrategy _strategy;
-  final JoystickComponent joystick;
+  final JoystickComponent? joystick;
+
+  final double _animationSpeed = 0.01;
+
+  late final SpriteAnimation _runDownAnimation;
+  late final SpriteAnimation _runLeftAnimation;
+  late final SpriteAnimation _runUpAnimation;
+  late final SpriteAnimation _runRightAnimation;
 
   final Vector2 oldPosition = Vector2.all(0);
   JoystickPlayer({
     required super.position,
-    required this.joystick,
+    this.joystick,
     required GameModel gameModel,
   }) : super(size: Vector2.all(kGameConfiguration.world.tileSize), anchor: Anchor.center) {
     velocity = Vector2(0, 0);
@@ -34,14 +44,16 @@ class JoystickPlayer extends SpriteAnimationComponent
 
   @override
   void onLoad() {
-    animation = SpriteAnimation.fromFrameData(
-      game.images.fromCache('ember.png'),
-      SpriteAnimationData.sequenced(
-        amount: 4,
-        textureSize: Vector2.all(16),
-        stepTime: 0.12,
-      ),
+    final spriteSheet = SpriteSheet(
+      image: game.images.fromCache('player.png'),
+      srcSize: Vector2(96.0, 96.0),
     );
+
+    _runDownAnimation = spriteSheet.createAnimation(row: 0, stepTime: _animationSpeed, to: 4);
+    _runLeftAnimation = spriteSheet.createAnimation(row: 1, stepTime: _animationSpeed, to: 4);
+    _runRightAnimation = spriteSheet.createAnimation(row: 2, stepTime: _animationSpeed, to: 4);
+    _runUpAnimation = spriteSheet.createAnimation(row: 3, stepTime: _animationSpeed, to: 4);
+    animation = _runLeftAnimation;
   }
 
   void schritteVibration() async {
@@ -57,13 +69,16 @@ class JoystickPlayer extends SpriteAnimationComponent
   @override
   void update(double dt) {
     // https://github.com/flame-engine/flame/blob/main/examples/lib/stories/input/joystick_player.dart
-    velocity.x = joystick.relativeDelta.x * runSpeed;
-    velocity.y = joystick.relativeDelta.y * runSpeed;
+    if (joystick != null) {
+      velocity.x = joystick!.relativeDelta.x * runSpeed;
+      velocity.y = joystick!.relativeDelta.y * runSpeed;
+    }
 
     if (velocity.isZero()) {
       return;
     }
 
+    _selectAnimationByVelocity();
     position += velocity * dt;
     if (position.distanceTo(oldPosition) > 80) {
       schritteVibration();
@@ -103,6 +118,28 @@ class JoystickPlayer extends SpriteAnimationComponent
     );
 
     super.update(dt);
+  }
+
+  void _selectAnimationByVelocity() {
+    // Assuming velocity.x and velocity.y are defined elsewhere in your class
+    double angleInDegrees = atan2(velocity.y, velocity.x) * (180 / pi);
+
+    // Normalize the angle to [0, 360) range
+    angleInDegrees = (angleInDegrees + 360) % 360;
+
+    if ((angleInDegrees > 315 && angleInDegrees <= 360) || (angleInDegrees <= 45)) {
+      // Right
+      animation = _runRightAnimation;
+    } else if (angleInDegrees > 135 && angleInDegrees <= 225) {
+      // Left
+      animation = _runLeftAnimation;
+    } else if (angleInDegrees > 45 && angleInDegrees <= 135) {
+      // Up
+      animation = _runDownAnimation;
+    } else if (angleInDegrees > 225 && angleInDegrees <= 315) {
+      // Down
+      animation = _runUpAnimation;
+    }
   }
 
   void adjustNearestSound(Vector2 cellPlayer, layerId, Type agentType, Sound sound) {

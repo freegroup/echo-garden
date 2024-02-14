@@ -19,3 +19,9 @@ Dein Ziel ist es, eine Stadt zu entwickeln, die als Modell für eine nachhaltige
 
 ## Epilog
 Deine Reise endet nicht mit der Errichtung dieser Stadt. Es ist ein ständiger Prozess, das Gleichgewicht zu bewahren und auf die leisen, doch aussagekräftigen Stimmen der Natur zu hören. Du hinterlässt ein Echo deiner Weisheit, das zukünftige Generationen leiten wird, den Weg der Harmonie zu beschreiten.
+
+
+
+## Inspiration
+https://www.dbsv.org/computerspiele.html
+https://blog.teufel.de/audio-games-spiele-fuer-blinde/

@@ -9,10 +9,10 @@ const kGameConfiguration = (
     tileSpriteSize: 64.0,
   ),
   world: (
-    tileSize: 32.0,
+    tileSize: 64.0,
     visibleTileRadius: 28.0,
     tileSnap: 1.0,
-    waterPercentage: 50.0,
+    waterPercentage: 40.0,
   ),
   rabbit: (
     birthThreshold: 10.0,

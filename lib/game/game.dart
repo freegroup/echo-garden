@@ -7,6 +7,7 @@ import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flame/palette.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class GameVisualization extends FlameGame with HasKeyboardHandlerComponents {
@@ -14,7 +15,7 @@ class GameVisualization extends FlameGame with HasKeyboardHandlerComponents {
 
   @override
   final WorldVisualization world;
-  late final JoystickComponent joystick;
+  JoystickComponent? joystick;
   late final JoystickPlayer player;
 
   GameVisualization({required GameModel gameModel})
@@ -25,17 +26,23 @@ class GameVisualization extends FlameGame with HasKeyboardHandlerComponents {
     cameraComponent = CameraComponent(world: world);
     gameModel.gameVisualization = this;
 
-    final knobPaint = BasicPalette.darkGreen.withAlpha(100).paint();
-    final backgroundPaint = BasicPalette.green.withAlpha(30).paint();
-    joystick = JoystickComponent(
-      knob: CircleComponent(radius: 30, paint: knobPaint),
-      background: CircleComponent(radius: 100, paint: backgroundPaint),
-      margin: const EdgeInsets.only(right: 40, bottom: 40),
-    );
+    // Check if the platform supports touch and is not macOS
+    if (!kIsWeb && defaultTargetPlatform != TargetPlatform.macOS) {
+      final knobPaint = BasicPalette.darkGreen.withAlpha(100).paint();
+      final backgroundPaint = BasicPalette.green.withAlpha(30).paint();
+      joystick = JoystickComponent(
+        knob: CircleComponent(radius: 30, paint: knobPaint),
+        background: CircleComponent(radius: 100, paint: backgroundPaint),
+        margin: const EdgeInsets.only(right: 40, bottom: 40),
+      );
+    }
+
     player = JoystickPlayer(gameModel: gameModel, position: canvasSize / 2, joystick: joystick);
 
     world.add(player);
-    cameraComponent.viewport.add(joystick);
+    if (joystick != null) {
+      cameraComponent.viewport.add(joystick!); // Add joystick if not null
+    }
 
     cameraComponent.follow(player);
   }
@@ -43,6 +50,7 @@ class GameVisualization extends FlameGame with HasKeyboardHandlerComponents {
   @override
   Future<void> onLoad() async {
     await images.loadAll([
+      'player.png',
       'ember.png',
       'rabbit-01.png',
       'beach-01.png',
