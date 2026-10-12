@@ -1,9 +1,10 @@
 /* it is the visual reprensentation Twin of an AgentModel 
 */
+import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/model/agent.dart';
 import 'package:flame/components.dart';
 
-class AgentVisualization extends PositionComponent {
+class AgentVisualization extends PositionComponent with HasGameReference<GameVisualization> {
   final AgentModel agentModel;
   AgentVisualization({
     required this.agentModel,

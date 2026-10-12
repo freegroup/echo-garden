@@ -6,7 +6,7 @@ import 'package:echo_garden/game/agent.dart';
 import 'package:echo_garden/game/game.dart';
 import 'package:flame/components.dart';
 
-class GrowingTileSquare extends AgentVisualization with HasGameReference<GameVisualization> {
+class GrowingTileSquare extends AgentVisualization {
   static final Vector2 spriteSize = Vector2.all(kGameConfiguration.tileMap.tileSpriteSize);
   List<Sprite> sprites = [];
   SpriteComponent? spriteComponent;

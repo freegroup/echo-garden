@@ -1,6 +1,7 @@
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/agent.dart';
 import 'package:echo_garden/game/objects/grass.dart';
+import 'package:echo_garden/model/objects/parched_grass.dart';
 import 'package:echo_garden/model/objects/plant.dart';
 
 class GrassModel extends PlantModel {
@@ -26,6 +27,7 @@ class GrassModel extends PlantModel {
 
     if (energy <= 0) {
       gameModelRef.remove(this);
+      await gameModelRef.add(ParchedGrassModel(gameModelRef: gameModelRef, cell: cell));
     }
   }
 

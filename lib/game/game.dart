@@ -47,6 +47,8 @@ class GameVisualization extends FlameGame with HasKeyboardHandlerComponents {
     cameraComponent.follow(player);
   }
 
+  GameModel get gameModel => world.gameModel;
+
   @override
   Future<void> onLoad() async {
     await images.loadAll([

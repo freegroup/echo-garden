@@ -35,6 +35,16 @@ const kGameConfiguration = (
       growPercentage: 0.005,
       requiresMinWaterLevel: 80.0, // can consume water from soil down to this soil energy level
     ),
+    /* consumes water, but do not provide any kind of energy.
+       This is because the sun can reduce now the water easy from the soil. 
+    */
+    parchedGrass: (
+      maxEnergy: 0.0,
+      initialEnergy: 0.0,
+      minEnergy: 0.001,
+      growEnergy: 0.03, // water consumption and grow energy
+      requiresMinWaterLevel: 0.0,
+    ),
     grass: (
       maxEnergy: 2.5,
       initialEnergy: 0.01,

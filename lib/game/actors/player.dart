@@ -7,7 +7,10 @@ import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/objects/beach.dart';
 import 'package:echo_garden/strategy/base.dart';
 import 'package:flame/components.dart';
+import 'package:flame/particles.dart';
+import 'package:flame/rendering.dart';
 import 'package:flame/sprite.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 
@@ -25,11 +28,17 @@ class JoystickPlayer extends SpriteAnimationComponent
   final JoystickComponent? joystick;
 
   final double _animationSpeed = 0.01;
+  double _postMovementEmissionDuration = 0.0;
 
   late final SpriteAnimation _runDownAnimation;
   late final SpriteAnimation _runLeftAnimation;
   late final SpriteAnimation _runUpAnimation;
   late final SpriteAnimation _runRightAnimation;
+
+  final random = Random();
+  final Tween<double> noise = Tween(begin: -2, end: 2);
+  final ColorTween colorTween = ColorTween(
+      begin: const Color.fromARGB(86, 76, 175, 79), end: const Color.fromARGB(152, 121, 85, 72));
 
   final Vector2 oldPosition = Vector2.all(0);
   JoystickPlayer({
@@ -38,8 +47,18 @@ class JoystickPlayer extends SpriteAnimationComponent
     required GameModel gameModel,
   }) : super(size: Vector2.all(kGameConfiguration.world.tileSize), anchor: Anchor.center) {
     velocity = Vector2(0, 0);
-    priority = 100;
+    priority = 500;
+    size = Vector2.all(96);
     _strategy = MovementStrategy(model: gameModel);
+    //debugMode = true;
+    decorator.addLast(Shadow3DDecorator(
+      base: Vector2(100, size.y),
+      angle: -1.4,
+      xShift: 200,
+      yScale: 2.5,
+      opacity: 0.3,
+      blur: 1.5,
+    ));
   }
 
   @override
@@ -74,7 +93,17 @@ class JoystickPlayer extends SpriteAnimationComponent
       velocity.y = joystick!.relativeDelta.y * runSpeed;
     }
 
+    // Update the post-movement emission timer
+    if (!velocity.isZero()) {
+      _postMovementEmissionDuration = 0.2; // Reset to 0.5 seconds when moving
+    } else if (_postMovementEmissionDuration > 0) {
+      _postMovementEmissionDuration -= dt;
+      _emitDust();
+    }
+
+    // Skip particle emission if velocity is zero and the timer has elapsed
     if (velocity.isZero()) {
+//      super.update(dt);
       return;
     }
 
@@ -117,7 +146,40 @@ class JoystickPlayer extends SpriteAnimationComponent
       Sound.blackForest,
     );
 
+    _emitDust();
     super.update(dt);
+  }
+
+  void _emitDust() {
+    game.world.add(ParticleSystemComponent(
+      position: position.clone()..add(Vector2(0, 48)),
+      priority: 300,
+      particle: Particle.generate(
+        count: 10,
+        generator: (i) {
+          return AcceleratedParticle(
+            lifespan: 3.5,
+            position: Vector2(
+              noise.transform(random.nextDouble()) * 5,
+              noise.transform(random.nextDouble()) * 2,
+            ),
+            speed: Vector2(
+              noise.transform(random.nextDouble()) * 3,
+              noise.transform(random.nextDouble()) * 3,
+            ),
+            child: ComputedParticle(
+              renderer: (canvas, particle) {
+                // Apply ease-out effect to opacity
+                double easeOutOpacity = pow(1 - particle.progress, 3).toDouble();
+                final paint = Paint()
+                  ..color = colorTween.transform(random.nextDouble())!.withOpacity(easeOutOpacity);
+                canvas.drawCircle(Offset.zero, random.nextDouble() * 2, paint);
+              },
+            ),
+          );
+        },
+      ),
+    ));
   }
 
   void _selectAnimationByVelocity() {

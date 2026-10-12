@@ -4,8 +4,10 @@ import 'dart:ui';
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/game/layer.dart';
-import 'package:echo_garden/main.dart';
 import 'package:echo_garden/model/index.dart';
+// requeried to load for extensions
+// ignore: unused_import
+import 'package:echo_garden/utils/extensions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
 import 'package:flutter/material.dart';

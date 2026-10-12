@@ -8,35 +8,50 @@ import 'package:echo_garden/model/objects/beach.dart';
 import 'package:echo_garden/model/objects/flat_water.dart';
 import 'package:echo_garden/model/scheduler/base.dart';
 import 'package:echo_garden/model/scheduler/random_percent.dart';
-import 'package:echo_garden/strategy/base.dart';
 import 'package:echo_garden/model/terraformer/diamond_square.dart';
+import 'package:echo_garden/strategy/base.dart';
 import 'package:flame/game.dart';
+import 'package:json_annotation/json_annotation.dart';
 
+// requried to load for extensions
+// ignore: unused_import
+import 'package:echo_garden/utils/extensions.dart';
+
+part 'game.g.dart'; // This file is generated
+
+@JsonSerializable(explicitToJson: true)
 class GameModel {
-  late final Vector2 _size;
+  @Vector2Converter()
+  final Vector2 size;
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
   late final BaseScheduler _rabbitScheduler;
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
   late final BaseScheduler _defaultScheduler;
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
   GameVisualization? gameVisualization;
 
+  @JsonKey(includeFromJson: false, includeToJson: false)
   late Map<String, Layer> layersMap;
 
-  int get width => _size.x.toInt();
-  int get height => _size.y.toInt();
+  int get width => size.x.toInt();
+  int get height => size.y.toInt();
 
-  GameModel(Vector2 size) {
-    _size = size;
+  GameModel({required this.size}) {
     layersMap = {
-      PatchModel.staticLayerId: Layer(_size),
-      SeedableModel.staticLayerId: Layer(_size),
-      PlantModel.staticLayerId: Layer(_size),
-      ActorModel.staticLayerId: Layer(_size),
+      PatchModel.staticLayerId: Layer(size),
+      SeedableModel.staticLayerId: Layer(size),
+      PlantModel.staticLayerId: Layer(size),
+      ActorModel.staticLayerId: Layer(size),
     };
 
     _rabbitScheduler = RandomPercentScheduler(percent: 33, gameModelRef: this);
     _defaultScheduler = RandomPercentScheduler(percent: 53, gameModelRef: this);
     //_defaultScheduler = BaseScheduler(gameModelRef: this);
 
-    var heightMap = diamondSquare(_size);
+    var heightMap = diamondSquare(size);
 
     // Flatten the 2D heightMap into a sorted 1D list
     List<double> sortedHeights = heightMap.expand((row) => row).toList();
@@ -86,6 +101,55 @@ class GameModel {
         if (water is WaterModel) {
           if (placeChecker.isAgentTypeNeighborOnLayer(
               cell: cell, layerId: PatchModel.staticLayerId, type: BeachModel)) {
+            remove(water);
+            add(FlatWaterModel(gameModelRef: this, cell: cell));
+          }
+        }
+      }
+    }
+
+    // place flat-water tiles near to the beach.
+    // this means convert "seedable" to "beach"
+    //
+    for (double x = 0; x < width; x++) {
+      for (double y = 0; y < height; y++) {
+        Vector2 cell = Vector2(x, y);
+        AgentModel? flatWater = getAgentAtCell(cell, PatchModel.staticLayerId);
+        // check of around of the seedable is water => convert to beach
+        if (flatWater is FlatWaterModel) {
+          var neighbours = placeChecker.getNeighborhoodByType(
+              cell: cell, layerId: PatchModel.staticLayerId, type: BeachModel);
+          if (neighbours.length > 5) {
+            remove(flatWater);
+            add(BeachModel(gameModelRef: this, cell: cell));
+          }
+        }
+      }
+    }
+    for (double x = 0; x < width; x++) {
+      for (double y = 0; y < height; y++) {
+        Vector2 cell = Vector2(x, y);
+        AgentModel? beach = getAgentAtCell(cell, PatchModel.staticLayerId);
+        // check of around of the seedable is water => convert to beach
+        if (beach is BeachModel) {
+          var neighbours = placeChecker.getNeighborhoodByType(
+              cell: cell, layerId: PatchModel.staticLayerId, type: FlatWaterModel);
+          if (neighbours.length > 5) {
+            remove(beach);
+            add(FlatWaterModel(gameModelRef: this, cell: cell));
+          }
+        }
+      }
+    }
+    for (double x = 0; x < width; x++) {
+      for (double y = 0; y < height; y++) {
+        Vector2 cell = Vector2(x, y);
+        AgentModel? water = getAgentAtCell(cell, PatchModel.staticLayerId);
+        // check of around of the seedable is water => convert to beach
+        if (water is WaterModel) {
+          var neighbours = placeChecker.getNeighborhoodByType(
+              cell: cell, layerId: PatchModel.staticLayerId, type: FlatWaterModel);
+          if (neighbours.length > 6) {
             remove(water);
             add(FlatWaterModel(gameModelRef: this, cell: cell));
           }
@@ -174,15 +238,15 @@ class GameModel {
         bool placed = false;
 
         // Randomly select a starting cell
-        int x = random.nextInt(_size.x.toInt());
-        int y = random.nextInt(_size.y.toInt());
+        int x = random.nextInt(size.x.toInt());
+        int y = random.nextInt(size.y.toInt());
 
         // Expand the search within the specified radius around the chosen cell
         for (int dx = -radius; dx <= radius && !placed; dx++) {
           for (int dy = -radius; dy <= radius && !placed; dy++) {
             // Ensure wrapping around the grid
-            double newX = ((x + dx + _size.x) % _size.x);
-            double newY = ((y + dy + _size.y) % _size.y);
+            double newX = ((x + dx + size.x) % size.x);
+            double newY = ((y + dy + size.y) % size.y);
             Vector2 newCell = Vector2(newX, newY);
 
             // it is only possible to place "plants" on a seedable area
@@ -229,4 +293,8 @@ class GameModel {
     // Print the elapsed time
     print('Grow function took ${stopwatch.elapsedMilliseconds} milliseconds');
   }
+
+  // Serialization
+  factory GameModel.fromJson(Map<String, dynamic> json) => _$GameModelFromJson(json);
+  Map<String, dynamic> toJson() => _$GameModelToJson(this);
 }

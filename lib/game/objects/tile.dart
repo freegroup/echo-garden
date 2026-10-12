@@ -3,10 +3,9 @@ import 'dart:ui';
 
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/agent.dart';
-import 'package:echo_garden/game/game.dart';
 import 'package:flame/components.dart';
 
-class TileSquare extends AgentVisualization with HasGameReference<GameVisualization> {
+class TileSquare extends AgentVisualization {
   static final Vector2 spriteSize = Vector2.all(kGameConfiguration.tileMap.tileSpriteSize);
   late final Sprite sprite;
   SpriteComponent? spriteComponent;

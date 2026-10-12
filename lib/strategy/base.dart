@@ -37,6 +37,37 @@ class MovementStrategy {
     return cells;
   }
 
+  Set<Vector2> getNeighborhoodByType({
+    required Vector2 cell,
+    bool includeCenter = false,
+    int radius = 1,
+    required Type type,
+    required String layerId,
+  }) {
+    Set<Vector2> cells = {};
+
+    for (int dx = -radius; dx <= radius; dx++) {
+      for (int dy = -radius; dy <= radius; dy++) {
+        if (!includeCenter && dx == 0 && dy == 0) continue; // Skip the center cell if not included
+
+        double newX = cell.x + dx;
+        double newY = cell.y + dy;
+
+        // Check if the new position is within the world boundaries
+        if (newX >= 0 && newX < model.width && newY >= 0 && newY < model.height) {
+          Vector2 newCell = Vector2(newX, newY);
+
+          // Optionally check if there's an agent at the new cell position, depending on your requirements
+          var foundAgent = model.getAgentAtCell(newCell, layerId);
+          if ((foundAgent.runtimeType == type)) {
+            cells.add(newCell);
+          }
+        }
+      }
+    }
+    return cells;
+  }
+
   bool isAgentTypeNeighborOnLayer({
     required Vector2 cell,
     int radius = 1,
@@ -96,7 +127,6 @@ class MovementStrategy {
 
     return nearestCell;
   }
-
 
   double getAggregatedEnergyForAgentTypeOnLayer({
     required Vector2 cell,
