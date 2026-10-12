@@ -12,7 +12,8 @@ class RandomPercentScheduler extends BaseScheduler {
   @override
   Future<void> step() async {
     // Convert percent to a fraction and calculate the number of agents to step
-    final int agentsToStep = (agents.length * (percent / 100.0)).round();
+    // ceil, so that a single remaining agent still gets its turn
+    final int agentsToStep = (agents.length * (percent / 100.0)).ceil();
 
     // Shuffle the list of agents
     List<AgentModel> shuffledAgents = List.from(agents)..shuffle(Random());

@@ -40,18 +40,12 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   @override
   Future<void> onLoad() async {
     addAll([..._layersMap.values]);
-
-    setCellsToShow(Rect.fromLTWH(
-      0,
-      0,
-      kGameConfiguration.world.visibleTileRadius,
-      kGameConfiguration.world.visibleTileRadius,
-    ));
   }
 
   @override
   void update(double dt) {
     super.update(dt);
+    _showCellsInView();
     _elapsedTime += dt;
     if (_elapsedTime >= _updateInterval) {
       gameModel.step();
@@ -59,24 +53,36 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     }
   }
 
+  // Show the cells the camera currently sees, plus one tile of margin.
+  void _showCellsInView() {
+    final view = gameRef.cameraComponent.visibleWorldRect;
+    final tileSize = kGameConfiguration.world.tileSize;
+    setCellsToShow(Rect.fromLTRB(
+      (view.left / tileSize).floorToDouble() - 1,
+      (view.top / tileSize).floorToDouble() - 1,
+      (view.right / tileSize).floorToDouble() + 1,
+      (view.bottom / tileSize).floorToDouble() + 1,
+    ));
+  }
+
   void setCellsToShow(Rect cells) {
     final stopwatch = Stopwatch()..start();
-
-    double radius = kGameConfiguration.world.visibleTileRadius;
 
     // snap to multiple of 5 to avoid too much updates of the tilemap
     //
     double alignment = kGameConfiguration.world.tileSnap;
     double alignedLeft = cells.left ~/ alignment * alignment;
     double alignedTop = cells.top ~/ alignment * alignment;
+    double alignedRight = (cells.right / alignment).ceil() * alignment;
+    double alignedBottom = (cells.bottom / alignment).ceil() * alignment;
 
     alignedLeft = max(0, alignedLeft);
     alignedTop = max(0, alignedTop);
 
-    alignedLeft = min(kGameConfiguration.tileMap.width - radius - 1, alignedLeft);
-    alignedTop = min(kGameConfiguration.tileMap.height - radius - 1, alignedTop);
+    alignedRight = min(kGameConfiguration.tileMap.width - 1, alignedRight);
+    alignedBottom = min(kGameConfiguration.tileMap.height - 1, alignedBottom);
 
-    cells = Rect.fromLTWH(alignedLeft, alignedTop, radius, radius);
+    cells = Rect.fromLTRB(alignedLeft, alignedTop, alignedRight, alignedBottom);
 
     if (cells == _cellToShow) {
       return;
@@ -168,7 +174,9 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
       //It can't be in the "_visibleModels", because it is
       //created right now. Assert this
       assert(!_visibleModels.contains(agent));
-      await (_layersMap[agent.layerId]!.add(agent.createVisualization()));
+      // not awaited: while the tile loads, setCellsToShow must already see the
+      // agent as visible, otherwise it would create a second visualization
+      _layersMap[agent.layerId]!.add(agent.createVisualization());
       _visibleModels.add(agent);
     }
   }

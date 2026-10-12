@@ -11,6 +11,7 @@ import 'package:echo_garden/model/scheduler/random_percent.dart';
 import 'package:echo_garden/model/terraformer/diamond_square.dart';
 import 'package:echo_garden/strategy/base.dart';
 import 'package:flame/game.dart';
+import 'package:flutter/foundation.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 // requried to load for extensions
@@ -38,6 +39,9 @@ class GameModel {
 
   int get width => size.x.toInt();
   int get height => size.y.toInt();
+
+  @visibleForTesting
+  int get rabbitCount => _rabbitScheduler.agents.length;
 
   GameModel({required this.size}) {
     layersMap = {
@@ -164,8 +168,8 @@ class GameModel {
       double y = random.nextInt(height).toDouble();
       Vector2 cell = Vector2(x, y);
       AgentModel? landmark = getAgentAtCell(cell, SeedableModel.staticLayerId);
-      // do not place rabbits on the water....
-      if (landmark != null) {
+      // do not place rabbits on the water or on top of another rabbit....
+      if (landmark != null && getAgentAtCell(cell, ActorModel.staticLayerId) == null) {
         add(RabbitAgent(gameModelRef: this, cell: cell));
       }
     }

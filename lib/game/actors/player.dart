@@ -116,18 +116,6 @@ class JoystickPlayer extends SpriteAnimationComponent
     }
     Vector2 cellPlayer = (position / kGameConfiguration.world.tileSize)..floor();
 
-    double alignedStartX = cellPlayer.x - kGameConfiguration.world.visibleTileRadius ~/ 2;
-    double alignedStartY = cellPlayer.y - kGameConfiguration.world.visibleTileRadius ~/ 2;
-
-    Rect cellsAroundPlayer = Rect.fromLTWH(
-      alignedStartX,
-      alignedStartY,
-      kGameConfiguration.world.visibleTileRadius,
-      kGameConfiguration.world.visibleTileRadius,
-    );
-    // center the rect around the player
-    game.world.setCellsToShow(cellsAroundPlayer);
-
     adjustNearestSound(
       cellPlayer,
       PatchModel.staticLayerId,
@@ -239,8 +227,8 @@ class JoystickPlayer extends SpriteAnimationComponent
   }
 
   @override
-  bool onKeyEvent(RawKeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    final isKeyDown = event is RawKeyDownEvent;
+  bool onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    final isKeyDown = event is KeyDownEvent || event is KeyRepeatEvent;
     final keyLeft = (event.logicalKey == LogicalKeyboardKey.arrowLeft) ||
         (event.logicalKey == LogicalKeyboardKey.keyA);
     final keyRight = (event.logicalKey == LogicalKeyboardKey.arrowRight) ||

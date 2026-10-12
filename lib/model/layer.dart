@@ -20,6 +20,7 @@ class Layer {
             growable: false);
   void add(Vector2 cell, AgentModel item) {
     final ivCell = _toIntVector2(cell);
+    assert(_grid[ivCell.x][ivCell.y] == null, 'cell $cell is already occupied');
     _grid[ivCell.x][ivCell.y] = item;
   }
 
@@ -42,6 +43,7 @@ class Layer {
     final ivNewCell = _toIntVector2(newCell);
     if (_grid[oldCell.x][oldCell.y] == agent) {
       _grid[oldCell.x][oldCell.y] = null;
+      assert(_grid[ivNewCell.x][ivNewCell.y] == null, 'cell $newCell is already occupied');
       _grid[ivNewCell.x][ivNewCell.y] = agent;
       return true;
     }

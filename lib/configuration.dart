@@ -10,14 +10,13 @@ const kGameConfiguration = (
   ),
   world: (
     tileSize: 64.0,
-    visibleTileRadius: 28.0,
     tileSnap: 1.0,
     waterPercentage: 40.0,
   ),
   rabbit: (
     birthThreshold: 10.0,
     initEnergy: 8,
-    energyPerStep: -0.8,
+    energyPerStep: -0.2,
     stepRadius: 1,
     maxEnergyPerEat: 2.0,
     maxEnergyCanEat: 25.0,

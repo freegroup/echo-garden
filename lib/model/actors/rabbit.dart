@@ -35,7 +35,8 @@ class RabbitAgent extends ActorModel {
     changed |= await _eat();
     changed |= await _reproduce();
     energy = energy + kGameConfiguration.rabbit.energyPerStep;
-    if (energy < 0) {
+    // the energy setter never goes below zero, so zero means starved
+    if (energy <= 0) {
       gameModelRef.remove(this);
     } else if (changed) {
       visualization?.onModelChange();
@@ -45,14 +46,22 @@ class RabbitAgent extends ActorModel {
     }
   }
 
-  Future<bool> _move() async {
-    Set<Vector2> possibleMoves = strategy.getNeighborhood(
-      includeCenter: true,
+  // Land cells in step range that no other actor occupies. The actor layer
+  // holds one agent per cell, so stepping onto a taken cell would overwrite it.
+  Set<Vector2> _freeCells({required bool includeCenter}) {
+    return strategy.getNeighborhood(
+      includeCenter: includeCenter,
       emptyCellsLookup: false,
       cell: cell,
       radius: kGameConfiguration.rabbit.stepRadius,
       layerId: SeedableModel.staticLayerId,
-    );
+    )..removeWhere((candidate) =>
+        candidate != cell &&
+        gameModelRef.getAgentAtCell(candidate, ActorModel.staticLayerId) != null);
+  }
+
+  Future<bool> _move() async {
+    Set<Vector2> possibleMoves = _freeCells(includeCenter: true);
     Vector2? newCell = pickRandomElement(possibleMoves);
     if (newCell != null) {
       await gameModelRef.move(this, newCell);
@@ -81,8 +90,14 @@ class RabbitAgent extends ActorModel {
 
   Future<bool> _reproduce() async {
     if (energy > birthThreshold) {
+      // the young one needs a cell of its own next to the parent
+      Vector2? birthCell = pickRandomElement(_freeCells(includeCenter: false));
+      if (birthCell == null) {
+        return false;
+      }
       energy /= 2;
-      await gameModelRef.add(RabbitAgent(gameModelRef: gameModelRef, cell: cell, energy: energy));
+      await gameModelRef
+          .add(RabbitAgent(gameModelRef: gameModelRef, cell: birthCell, energy: energy));
       return true;
     }
     return false;
