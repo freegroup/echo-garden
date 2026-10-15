@@ -1,8 +1,6 @@
 import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/game/agent.dart';
-import 'package:echo_garden/game/objects/soil.dart';
 import 'package:echo_garden/model/objects/seedable.dart';
 
 class SoilModel extends SeedableModel {
@@ -11,16 +9,7 @@ class SoilModel extends SeedableModel {
   }
 
   @override
-  AgentVisualization createVisualization() {
-    assert(visualization == null);
-    return visualization = SoilTile(
-      agentModel: this,
-      position: cell * kGameConfiguration.world.tileSize,
-    );
-  }
-
-  @override
-  Future<void> step() async {
+  void step() {
     energy = min(
       kGameConfiguration.patch.soil.maxEnergy,
       energy + kGameConfiguration.patch.soil.incEnergy,

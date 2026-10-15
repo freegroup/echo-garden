@@ -1,6 +1,6 @@
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/game/game.dart';
-import 'package:echo_garden/game/sound_env.dart';
+import 'package:echo_garden/game_session.dart';
+import 'package:echo_garden/representation/sound_env.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/screens/start_screen.dart';
 
@@ -24,14 +24,14 @@ Future<void> main() async {
 
   GameModel model =
       GameModel(size: Vector2(kGameConfiguration.tileMap.width, kGameConfiguration.tileMap.height));
-  final game = GameVisualization(gameModel: model);
-  runApp(EchoGardenApp(game: game));
+  final session = GameSession(model);
+  runApp(EchoGardenApp(session: session));
 }
 
 class EchoGardenApp extends StatelessWidget {
-  final GameVisualization game;
+  final GameSession session;
 
-  const EchoGardenApp({super.key, required this.game});
+  const EchoGardenApp({super.key, required this.session});
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +41,7 @@ class EchoGardenApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: StartScreen(game: game),
+      home: StartScreen(session: session),
     );
   }
 }

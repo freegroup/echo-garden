@@ -12,7 +12,7 @@ abstract class PlantModel extends AgentModel {
   String get layerId => PlantModel.staticLayerId;
 
   @override
-  Future<void> step() async {}
+  void step() {}
 
   bool grow(double growEnergy, double maxEnergy, double requiredMinWaterLevel) {
     if (energy >= maxEnergy) {

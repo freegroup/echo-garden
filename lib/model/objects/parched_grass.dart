@@ -1,6 +1,4 @@
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/game/agent.dart';
-import 'package:echo_garden/game/objects/parched_grass.dart';
 import 'package:echo_garden/model/objects/plant.dart';
 
 class ParchedGrassModel extends PlantModel {
@@ -10,19 +8,10 @@ class ParchedGrassModel extends PlantModel {
   }
 
   @override
-  AgentVisualization createVisualization() {
-    assert(visualization == null);
-    return visualization = ParchedGrassTile(
-      agentModel: this,
-      position: cell * kGameConfiguration.world.tileSize,
-    );
-  }
-
-  @override
-  Future<void> step() async {
+  void step() {
     bool changed = false;
     changed |= _grow();
-    if (changed && visualization != null) await visualization!.onModelChange();
+    if (changed) gameModelRef.notifyChanged(this);
   }
 
   bool _grow() {

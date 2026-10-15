@@ -13,6 +13,10 @@ const kGameConfiguration = (
     tileSnap: 1.0,
     waterPercentage: 40.0,
   ),
+  player: (
+    speed: 3.9, // cells per second (formerly 250 pixels per second at 64 pixels per cell)
+    startBeachDistance: 3, // the player starts on land, at most this many cells away from a beach
+  ),
   rabbit: (
     birthThreshold: 10.0,
     initEnergy: 8,

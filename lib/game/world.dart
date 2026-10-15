@@ -3,7 +3,9 @@ import 'dart:ui';
 
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/game.dart';
+import 'package:echo_garden/game/agent.dart';
 import 'package:echo_garden/game/layer.dart';
+import 'package:echo_garden/game/visualization_factory.dart';
 import 'package:echo_garden/model/index.dart';
 // requeried to load for extensions
 // ignore: unused_import
@@ -12,15 +14,18 @@ import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
 import 'package:flutter/material.dart';
 
+/// Draws the tiles of the model.
+///
+/// To keep the game fast, only agents in the visible area get a tile.
+/// The GraphicsRepresentation tells the world when agents change.
 class WorldVisualization extends World with HasGameRef<GameVisualization> {
   final GameModel gameModel;
 
   late Vector2 _canvasSize;
   late Vector2 _modelSize;
 
-  final Set<AgentModel> _visibleModels = <AgentModel>{};
-  double _elapsedTime = 0.0;
-  final double _updateInterval = 1.3; // 100 milliseconds
+  // the tiles of all agents that are currently shown
+  final Map<AgentModel, AgentVisualization> _visualizations = {};
 
   Rect _cellToShow = const Rect.fromLTWH(0, 0, 0, 0);
   late Map<String, TileLayer> _layersMap;
@@ -46,11 +51,6 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   void update(double dt) {
     super.update(dt);
     _showCellsInView();
-    _elapsedTime += dt;
-    if (_elapsedTime >= _updateInterval) {
-      gameModel.step();
-      _elapsedTime -= _updateInterval;
-    }
   }
 
   // Show the cells the camera currently sees, plus one tile of margin.
@@ -91,18 +91,12 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     _cellToShow = cells;
 
     final removeStart = stopwatch.elapsedMilliseconds;
-    _visibleModels.removeWhere((agentModel) {
-      try {
-        if (_cellToShow.containsNotVector2(agentModel.cell)) {
-          agentModel.visualization?.removeFromParent();
-          agentModel.visualization = null;
-          return true;
-        }
-        return false;
-      } catch (e) {
-        print(e);
+    _visualizations.removeWhere((agentModel, visualization) {
+      if (_cellToShow.containsNotVector2(agentModel.cell)) {
+        visualization.removeFromParent();
+        return true;
       }
-      return true;
+      return false;
     });
     final removeEnd = stopwatch.elapsedMilliseconds;
     print('Time to remove squares: ${removeEnd - removeStart}ms');
@@ -132,9 +126,8 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
             // Get the model for the layer at the cell
             final agentModel = gameModel.getAgentAtCell(cell, layerId);
             // Check if there is a model and not already a visualization is present
-            if (agentModel != null && !_visibleModels.contains(agentModel)) {
-              layer.add(agentModel.createVisualization());
-              _visibleModels.add(agentModel);
+            if (agentModel != null && !_visualizations.containsKey(agentModel)) {
+              _show(agentModel, layer);
             }
           } catch (e) {
             print(e);
@@ -167,35 +160,39 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     );
   }
 
-  Future<void> onModelAdded(AgentModel agent) async {
-    // check if the agent in the visible area.
-    //
+  void _show(AgentModel agent, TileLayer layer) {
+    AgentVisualization visualization = createVisualization(agent, gameModel);
+    // not awaited: while the tile loads, setCellsToShow must already see the
+    // agent as visible, otherwise it would create a second visualization
+    layer.add(visualization);
+    _visualizations[agent] = visualization;
+  }
+
+  /// Removes all tiles. The next frame creates them again from the model.
+  void resync() {
+    for (AgentVisualization visualization in _visualizations.values) {
+      visualization.removeFromParent();
+    }
+    _visualizations.clear();
+    _cellToShow = Rect.zero;
+  }
+
+  void showIfVisible(AgentModel agent) {
+    // only agents in the visible area get a tile
     if (_cellToShow.containsVector2(agent.cell)) {
-      //It can't be in the "_visibleModels", because it is
-      //created right now. Assert this
-      assert(!_visibleModels.contains(agent));
-      // not awaited: while the tile loads, setCellsToShow must already see the
-      // agent as visible, otherwise it would create a second visualization
-      _layersMap[agent.layerId]!.add(agent.createVisualization());
-      _visibleModels.add(agent);
+      // the agent was created right now, so it can't have a tile yet
+      assert(!_visualizations.containsKey(agent));
+      _show(agent, _layersMap[agent.layerId]!);
     }
   }
 
-  Future<void> onModelRemoved(AgentModel agent) async {
-    bool hasVis = agent.visualization != null;
-
-    // is is not mandatory, that the model is in the current viewport.
-    // in this case the visualization is null...
-    agent.visualization?.removeFromParent();
-    agent.visualization = null;
-    // ...and not part in the _visibleModels set.
-    bool hasRemoved = _visibleModels.remove(agent);
-
-    // assert that the model was part of the _visibleModel if it has a visualization
-    assert(hasVis == hasRemoved);
+  void hide(AgentModel agent) {
+    // agents outside of the visible area have no tile
+    AgentVisualization? visualization = _visualizations.remove(agent);
+    visualization?.removeFromParent();
   }
 
-  Future<void> onModelMoved(AgentModel agent) async {
-    //
+  void refresh(AgentModel agent) {
+    _visualizations[agent]?.onModelChange();
   }
 }

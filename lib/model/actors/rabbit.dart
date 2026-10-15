@@ -1,8 +1,6 @@
 import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/game/agent.dart';
-import 'package:echo_garden/game/objects/rabbit.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/strategy/base.dart';
 import 'package:echo_garden/utils/random.dart';
@@ -20,29 +18,17 @@ class RabbitAgent extends ActorModel {
   }
 
   @override
-  AgentVisualization createVisualization() {
-    assert(visualization == null);
-    return visualization = RabbitTile(
-      agentModel: this,
-      position: cell * kGameConfiguration.world.tileSize,
-    );
-  }
-
-  @override
-  Future<void> step() async {
+  void step() {
     bool changed = false;
-    changed |= await _move();
-    changed |= await _eat();
-    changed |= await _reproduce();
+    changed |= _move();
+    changed |= _eat();
+    changed |= _reproduce();
     energy = energy + kGameConfiguration.rabbit.energyPerStep;
     // the energy setter never goes below zero, so zero means starved
     if (energy <= 0) {
       gameModelRef.remove(this);
     } else if (changed) {
-      visualization?.onModelChange();
-    }
-    if (visualization != null) {
-      assert(visualization!.parent != null);
+      gameModelRef.notifyChanged(this);
     }
   }
 
@@ -60,17 +46,17 @@ class RabbitAgent extends ActorModel {
         gameModelRef.getAgentAtCell(candidate, ActorModel.staticLayerId) != null);
   }
 
-  Future<bool> _move() async {
+  bool _move() {
     Set<Vector2> possibleMoves = _freeCells(includeCenter: true);
     Vector2? newCell = pickRandomElement(possibleMoves);
     if (newCell != null) {
-      await gameModelRef.move(this, newCell);
+      gameModelRef.move(this, newCell);
       return true;
     }
     return false;
   }
 
-  Future<bool> _eat() async{
+  bool _eat() {
     AgentModel? patch = gameModelRef.getAgentAtCell(cell, PlantModel.staticLayerId);
     if (patch != null && patch is PlantModel) {
       if (patch.energy < kGameConfiguration.rabbit.maxEnergyCanEat) {
@@ -78,9 +64,9 @@ class RabbitAgent extends ActorModel {
         energy += diff;
         patch.energy -= diff;
         if (patch.energy <= 0) {
-          await gameModelRef.remove(patch);
+          gameModelRef.remove(patch);
         } else {
-          await patch.visualization?.onModelChange();
+          gameModelRef.notifyChanged(patch);
         }
         return true;
       }
@@ -88,7 +74,7 @@ class RabbitAgent extends ActorModel {
     return false;
   }
 
-  Future<bool> _reproduce() async {
+  bool _reproduce() {
     if (energy > birthThreshold) {
       // the young one needs a cell of its own next to the parent
       Vector2? birthCell = pickRandomElement(_freeCells(includeCenter: false));
@@ -96,8 +82,7 @@ class RabbitAgent extends ActorModel {
         return false;
       }
       energy /= 2;
-      await gameModelRef
-          .add(RabbitAgent(gameModelRef: gameModelRef, cell: birthCell, energy: energy));
+      gameModelRef.add(RabbitAgent(gameModelRef: gameModelRef, cell: birthCell, energy: energy));
       return true;
     }
     return false;

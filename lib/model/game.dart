@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/model/actors/rabbit.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/objects/beach.dart';
@@ -32,7 +31,7 @@ class GameModel {
   late final BaseScheduler _defaultScheduler;
 
   @JsonKey(includeFromJson: false, includeToJson: false)
-  GameVisualization? gameVisualization;
+  final List<ModelListener> _listeners = [];
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   late Map<String, Layer> layersMap;
@@ -175,30 +174,51 @@ class GameModel {
     }
   }
 
-  Future<void> add(AgentModel agent) async {
+  void addListener(ModelListener listener) {
+    _listeners.add(listener);
+  }
+
+  void removeListener(ModelListener listener) {
+    _listeners.remove(listener);
+  }
+
+  void add(AgentModel agent) {
     layersMap[agent.layerId]?.add(agent.cell, agent);
     if (agent is RabbitAgent) {
       _rabbitScheduler.add(agent);
     } else {
       _defaultScheduler.add(agent);
     }
-    await gameVisualization?.onModelAdded(agent);
+    for (ModelListener listener in _listeners) {
+      listener.onAgentAdded(agent);
+    }
   }
 
-  Future<void> remove(AgentModel agent) async {
+  void remove(AgentModel agent) {
     if (agent is RabbitAgent) {
       _rabbitScheduler.remove(agent);
     } else {
       _defaultScheduler.remove(agent);
     }
     layersMap[agent.layerId]?.remove(agent);
-    await gameVisualization?.onModelRemoved(agent);
+    for (ModelListener listener in _listeners) {
+      listener.onAgentRemoved(agent);
+    }
   }
 
-  Future<void> move(AgentModel agent, Vector2 newCell) async {
+  void move(AgentModel agent, Vector2 newCell) {
     layersMap[agent.layerId]?.move(agent, newCell);
     agent.cell = newCell;
-    await gameVisualization?.onModelMoved(agent);
+    for (ModelListener listener in _listeners) {
+      listener.onAgentMoved(agent);
+    }
+  }
+
+  // Agents call this after their state (e.g. energy) has changed.
+  void notifyChanged(AgentModel agent) {
+    for (ModelListener listener in _listeners) {
+      listener.onAgentChanged(agent);
+    }
   }
 
   // Method to get a random agent of type T at a specific cell position
@@ -216,13 +236,13 @@ class GameModel {
     return layersMap[layerId]!;
   }
 
-  Future<void> step() async {
-    await _defaultScheduler.step();
-    await _rabbitScheduler.step();
-    await _grow();
+  void step() {
+    _defaultScheduler.step();
+    _rabbitScheduler.step();
+    _grow();
   }
 
-  Future<void> _grow() async {
+  void _grow() {
     var stopwatch = Stopwatch()..start();
 
     // Define the total number of agents to place for each type
@@ -232,11 +252,11 @@ class GameModel {
     int totalFlower = (area * kGameConfiguration.plant.flower.growPercentage).toInt();
     int totalTree = (area * kGameConfiguration.plant.tree.growPercentage).toInt();
 
-    Future<void> placePlants(
+    void placePlants(
         {required Function(Vector2) placeFunction,
         required int total,
         int radius = 1,
-        required double minWaterEnergyLevel}) async {
+        required double minWaterEnergyLevel}) {
       final random = Random();
       for (int i = 0; i < total; i++) {
         bool placed = false;
@@ -261,7 +281,7 @@ class GameModel {
               // ..and that the patch has enough water to seed.
               if (patch.energy > minWaterEnergyLevel &&
                   getAgentAtCell(newCell, PlantModel.staticLayerId) == null) {
-                await placeFunction(newCell);
+                placeFunction(newCell);
                 placed = true;
               }
             }
@@ -270,25 +290,25 @@ class GameModel {
       }
     }
 
-    await placePlants(
+    placePlants(
       total: totalGrass,
       minWaterEnergyLevel: kGameConfiguration.plant.grass.requiresMinWaterLevel,
-      placeFunction: (cell) async => await add(GrassModel(gameModelRef: this, cell: cell)),
+      placeFunction: (cell) => add(GrassModel(gameModelRef: this, cell: cell)),
     );
-    await placePlants(
+    placePlants(
       total: totalWeed,
       minWaterEnergyLevel: kGameConfiguration.plant.weed.requiresMinWaterLevel,
-      placeFunction: (cell) async => await add(WeedModel(gameModelRef: this, cell: cell)),
+      placeFunction: (cell) => add(WeedModel(gameModelRef: this, cell: cell)),
     );
-    await placePlants(
+    placePlants(
       total: totalFlower,
       minWaterEnergyLevel: kGameConfiguration.plant.flower.requiresMinWaterLevel,
-      placeFunction: (cell) async => await add(FlowerModel(gameModelRef: this, cell: cell)),
+      placeFunction: (cell) => add(FlowerModel(gameModelRef: this, cell: cell)),
     );
-    await placePlants(
+    placePlants(
       total: totalTree,
       minWaterEnergyLevel: kGameConfiguration.plant.tree.requiresMinWaterLevel,
-      placeFunction: (cell) async => await add(TreeModel(gameModelRef: this, cell: cell)),
+      placeFunction: (cell) => add(TreeModel(gameModelRef: this, cell: cell)),
     );
 
     // Stop the stopwatch

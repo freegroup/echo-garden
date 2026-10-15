@@ -51,6 +51,12 @@ class SoundEnvironment {
     }
   }
 
+  static Future<void> stopAll() async {
+    for (Sound sound in Sound.values) {
+      await stop(sound);
+    }
+  }
+
   static Future<void> stop(Sound sound) async {
     Future<AudioPlayer>? player = _audioPlayers.remove(sound);
     if (player != null) {

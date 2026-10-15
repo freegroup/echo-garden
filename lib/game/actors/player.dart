@@ -2,30 +2,19 @@ import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/game.dart';
-import 'package:echo_garden/game/sound_env.dart';
-import 'package:echo_garden/model/index.dart';
-import 'package:echo_garden/model/objects/beach.dart';
-import 'package:echo_garden/strategy/base.dart';
+import 'package:echo_garden/player.dart';
 import 'package:flame/components.dart';
 import 'package:flame/particles.dart';
 import 'package:flame/rendering.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 
-// Update the sound based on proximity to the nearest BeachModel within a maximum radius.
-int _maxRadiusTiles = 7;
-double _tileSize = kGameConfiguration.world.tileSize;
-double _maxRadiusPixel = _maxRadiusTiles * _tileSize;
-Vector2 _halfTile = Vector2.all(_tileSize / 2.0); // Calculate once and reuse
-
-class JoystickPlayer extends SpriteAnimationComponent
-    with HasGameReference<GameVisualization>, KeyboardHandler {
-  late final Vector2 velocity;
-  final double runSpeed = 250.0;
-  late MovementStrategy _strategy;
-  final JoystickComponent? joystick;
+/// Shows the player of the model on the screen.
+///
+/// The sprite only follows the Player; it never moves the player itself.
+class PlayerSprite extends SpriteAnimationComponent with HasGameReference<GameVisualization> {
+  final Player _player;
 
   final double _animationSpeed = 0.01;
   double _postMovementEmissionDuration = 0.0;
@@ -41,15 +30,12 @@ class JoystickPlayer extends SpriteAnimationComponent
       begin: const Color.fromARGB(86, 76, 175, 79), end: const Color.fromARGB(152, 121, 85, 72));
 
   final Vector2 oldPosition = Vector2.all(0);
-  JoystickPlayer({
-    required super.position,
-    this.joystick,
-    required GameModel gameModel,
-  }) : super(size: Vector2.all(kGameConfiguration.world.tileSize), anchor: Anchor.center) {
-    velocity = Vector2(0, 0);
+
+  PlayerSprite({required Player player})
+      : _player = player,
+        super(size: Vector2.all(96), anchor: Anchor.center) {
     priority = 500;
-    size = Vector2.all(96);
-    _strategy = MovementStrategy(model: gameModel);
+    position = _pixelPosition();
     //debugMode = true;
     decorator.addLast(Shadow3DDecorator(
       base: Vector2(100, size.y),
@@ -59,6 +45,10 @@ class JoystickPlayer extends SpriteAnimationComponent
       opacity: 0.3,
       blur: 1.5,
     ));
+  }
+
+  Vector2 _pixelPosition() {
+    return _player.position * kGameConfiguration.world.tileSize;
   }
 
   @override
@@ -87,52 +77,27 @@ class JoystickPlayer extends SpriteAnimationComponent
 
   @override
   void update(double dt) {
-    // https://github.com/flame-engine/flame/blob/main/examples/lib/stories/input/joystick_player.dart
-    if (joystick != null) {
-      velocity.x = joystick!.relativeDelta.x * runSpeed;
-      velocity.y = joystick!.relativeDelta.y * runSpeed;
-    }
+    position = _pixelPosition();
 
     // Update the post-movement emission timer
-    if (!velocity.isZero()) {
-      _postMovementEmissionDuration = 0.2; // Reset to 0.5 seconds when moving
+    if (_player.isMoving) {
+      _postMovementEmissionDuration = 0.2;
     } else if (_postMovementEmissionDuration > 0) {
       _postMovementEmissionDuration -= dt;
       _emitDust();
     }
 
-    // Skip particle emission if velocity is zero and the timer has elapsed
-    if (velocity.isZero()) {
-//      super.update(dt);
+    // standing still: no dust and no running animation
+    if (!_player.isMoving) {
       return;
     }
 
-    _selectAnimationByVelocity();
-    position += velocity * dt;
+    _selectAnimationByDirection();
     if (position.distanceTo(oldPosition) > 80) {
       schritteVibration();
       oldPosition.x = position.x;
       oldPosition.y = position.y;
     }
-    Vector2 cellPlayer = (position / kGameConfiguration.world.tileSize)..floor();
-
-    adjustNearestSound(
-      cellPlayer,
-      PatchModel.staticLayerId,
-      BeachModel,
-      Sound.ocean,
-    );
-
-    double maxPossibleEnergy =
-        kGameConfiguration.plant.tree.maxEnergy * (_maxRadiusTiles * _maxRadiusTiles - 1);
-    adjustAggregatedSound(
-      cellPlayer,
-      PlantModel.staticLayerId,
-      TreeModel,
-      200,
-      maxPossibleEnergy,
-      Sound.blackForest,
-    );
 
     _emitDust();
     super.update(dt);
@@ -170,9 +135,9 @@ class JoystickPlayer extends SpriteAnimationComponent
     ));
   }
 
-  void _selectAnimationByVelocity() {
-    // Assuming velocity.x and velocity.y are defined elsewhere in your class
-    double angleInDegrees = atan2(velocity.y, velocity.x) * (180 / pi);
+  void _selectAnimationByDirection() {
+    Vector2 direction = _player.direction;
+    double angleInDegrees = atan2(direction.y, direction.x) * (180 / pi);
 
     // Normalize the angle to [0, 360) range
     angleInDegrees = (angleInDegrees + 360) % 360;
@@ -190,91 +155,5 @@ class JoystickPlayer extends SpriteAnimationComponent
       // Down
       animation = _runUpAnimation;
     }
-  }
-
-  void adjustNearestSound(Vector2 cellPlayer, layerId, Type agentType, Sound sound) {
-    var nearestCell = _strategy.getNearestCellForAgentTypeOnLayer(
-      cell: cellPlayer,
-      type: agentType,
-      radius: _maxRadiusTiles,
-      layerId: layerId,
-    );
-    if (nearestCell != null) {
-      Vector2 center = nearestCell * _tileSize + _halfTile;
-      double distanceToBeach = center.distanceTo(position + _halfTile).clamp(0, _maxRadiusPixel);
-      double volume = 1 - (distanceToBeach / _maxRadiusPixel);
-      SoundEnvironment.loop(sound, volume);
-    } else {
-      SoundEnvironment.stop(sound);
-    }
-  }
-
-  void adjustAggregatedSound(Vector2 cellPlayer, layerId, Type agentType, double energyMinLevel,
-      double energyMaxLevel, Sound sound) {
-    var aggregatedEnergy = _strategy.getAggregatedEnergyForAgentTypeOnLayer(
-      cell: cellPlayer,
-      type: agentType,
-      radius: _maxRadiusTiles,
-      layerId: layerId,
-    );
-    if (aggregatedEnergy > energyMinLevel) {
-      aggregatedEnergy = aggregatedEnergy.clamp(energyMinLevel, energyMaxLevel);
-      double volume = ((aggregatedEnergy - energyMinLevel) / (energyMaxLevel - energyMinLevel));
-      SoundEnvironment.loop(sound, volume);
-    } else {
-      SoundEnvironment.stop(sound);
-    }
-  }
-
-  @override
-  bool onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    final isKeyDown = event is KeyDownEvent || event is KeyRepeatEvent;
-    final keyLeft = (event.logicalKey == LogicalKeyboardKey.arrowLeft) ||
-        (event.logicalKey == LogicalKeyboardKey.keyA);
-    final keyRight = (event.logicalKey == LogicalKeyboardKey.arrowRight) ||
-        (event.logicalKey == LogicalKeyboardKey.keyD);
-    final keyUp = (event.logicalKey == LogicalKeyboardKey.arrowUp) ||
-        (event.logicalKey == LogicalKeyboardKey.keyW);
-    final keyDown = (event.logicalKey == LogicalKeyboardKey.arrowDown) ||
-        (event.logicalKey == LogicalKeyboardKey.keyX);
-
-    if (isKeyDown) {
-      if (keyLeft) {
-        velocity.x = -runSpeed;
-      } else if (keyRight) {
-        velocity.x = runSpeed;
-      } else if (keyUp) {
-        velocity.y = -runSpeed;
-      } else if (keyDown) {
-        velocity.y = runSpeed;
-      }
-    } else {
-      final hasLeft = keysPressed.contains(LogicalKeyboardKey.arrowLeft);
-      final hasRight = keysPressed.contains(LogicalKeyboardKey.arrowRight);
-      final hasUp = keysPressed.contains(LogicalKeyboardKey.arrowUp);
-      final hasDown = keysPressed.contains(LogicalKeyboardKey.arrowDown);
-
-      if (hasLeft && hasRight) {
-        // Leave the current speed unchanged
-      } else if (hasLeft) {
-        velocity.x = -runSpeed;
-      } else if (hasRight) {
-        velocity.x = runSpeed;
-      } else {
-        velocity.x = 0;
-      }
-
-      if (hasUp && hasDown) {
-        // Leave the current speed unchanged
-      } else if (hasUp) {
-        velocity.y = -runSpeed;
-      } else if (hasDown) {
-        velocity.y = runSpeed;
-      } else {
-        velocity.y = 0;
-      }
-    }
-
-    return true;
   }
 }

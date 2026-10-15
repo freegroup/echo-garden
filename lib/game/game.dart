@@ -1,50 +1,32 @@
-import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/actors/player.dart';
 import 'package:echo_garden/game/world.dart';
-import 'package:echo_garden/model/agent.dart';
 import 'package:echo_garden/model/game.dart';
+import 'package:echo_garden/player.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
-import 'package:flame/input.dart';
-import 'package:flame/palette.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 
-class GameVisualization extends FlameGame with HasKeyboardHandlerComponents {
+class GameVisualization extends FlameGame {
   late final CameraComponent cameraComponent;
 
   @override
   final WorldVisualization world;
-  JoystickComponent? joystick;
-  late final JoystickPlayer player;
+  late final PlayerSprite player;
 
-  GameVisualization({required GameModel gameModel})
+  // The joystick of the touch input device, if there is one. It is drawn on
+  // top of the world, so it does not move with the camera.
+  GameVisualization(
+      {required GameModel gameModel, required Player player, JoystickComponent? joystick})
       : world = WorldVisualization(gameModel: gameModel) {
-    var modelSize = Vector2(kGameConfiguration.tileMap.width, kGameConfiguration.tileMap.width);
-    var canvasSize = modelSize * kGameConfiguration.world.tileSize;
-
     cameraComponent = CameraComponent(world: world);
-    gameModel.gameVisualization = this;
 
-    // Check if the platform supports touch and is not macOS
-    if (!kIsWeb && defaultTargetPlatform != TargetPlatform.macOS) {
-      final knobPaint = BasicPalette.darkGreen.withAlpha(100).paint();
-      final backgroundPaint = BasicPalette.green.withAlpha(30).paint();
-      joystick = JoystickComponent(
-        knob: CircleComponent(radius: 30, paint: knobPaint),
-        background: CircleComponent(radius: 100, paint: backgroundPaint),
-        margin: const EdgeInsets.only(right: 40, bottom: 40),
-      );
-    }
+    this.player = PlayerSprite(player: player);
+    world.add(this.player);
 
-    player = JoystickPlayer(gameModel: gameModel, position: canvasSize / 2, joystick: joystick);
-
-    world.add(player);
     if (joystick != null) {
-      cameraComponent.viewport.add(joystick!); // Add joystick if not null
+      cameraComponent.viewport.add(joystick);
     }
 
-    cameraComponent.follow(player);
+    cameraComponent.follow(this.player);
   }
 
   GameModel get gameModel => world.gameModel;
@@ -54,7 +36,16 @@ class GameVisualization extends FlameGame with HasKeyboardHandlerComponents {
     await images.loadAll([
       'player.png',
       'ember.png',
-      'rabbit-01.png',
+      'rabbit-brown-front.png',
+      'rabbit-brown-front-side.png',
+      'rabbit-brown-side.png',
+      'rabbit-brown-back-side.png',
+      'rabbit-brown-back.png',
+      'rabbit-grey-front.png',
+      'rabbit-grey-front-side.png',
+      'rabbit-grey-side.png',
+      'rabbit-grey-back-side.png',
+      'rabbit-grey-back.png',
       'beach-01.png',
       'beach-02.png',
       'fir-01.png',
@@ -76,17 +67,5 @@ class GameVisualization extends FlameGame with HasKeyboardHandlerComponents {
     ]);
 
     addAll([cameraComponent, world]);
-  }
-
-  Future<void> onModelAdded(AgentModel agent) async {
-    await world.onModelAdded(agent);
-  }
-
-  Future<void> onModelRemoved(AgentModel agent) async {
-    world.onModelRemoved(agent);
-  }
-
-  Future<void> onModelMoved(AgentModel agent) async {
-    world.onModelMoved(agent);
   }
 }

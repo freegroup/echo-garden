@@ -1,8 +1,5 @@
 import 'dart:math';
 
-import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/game/agent.dart';
-import 'package:echo_garden/game/objects/square.dart';
 import 'package:echo_garden/model/game.dart';
 import 'package:flame/components.dart';
 
@@ -15,7 +12,6 @@ class AgentModel {
   double minEnergy;
 
   final GameModel gameModelRef;
-  AgentVisualization? visualization;
 
   AgentModel(
       {required this.gameModelRef, required this.cell, double energy = 0, this.minEnergy = 0})
@@ -30,15 +26,7 @@ class AgentModel {
     _energy = max(minEnergy, value);
   }
 
-  AgentVisualization createVisualization() {
-    assert(visualization == null);
-    return visualization = ColoredSquare.red(
-      this,
-      cell * kGameConfiguration.world.tileSize,
-    );
-  }
-
-  Future<void> step() async {
+  void step() {
     //
   }
 }

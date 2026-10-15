@@ -1,8 +1,6 @@
 import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/game/agent.dart';
-import 'package:echo_garden/game/objects/tree.dart';
 import 'package:echo_garden/model/agent.dart';
 import 'package:echo_garden/model/objects/plant.dart';
 import 'package:echo_garden/model/objects/seedable.dart';
@@ -19,21 +17,12 @@ class TreeModel extends PlantModel {
   }
 
   @override
-  AgentVisualization createVisualization() {
-    assert(visualization == null);
-    return visualization = TreeTile(
-      agentModel: this,
-      position: cell * kGameConfiguration.world.tileSize,
-    );
-  }
-
-  @override
-  Future<void> step() async {
+  void step() {
     bool changed = false;
     changed |= _grow();
-    changed |= await _seed();
+    changed |= _seed();
 
-    if (changed) visualization?.onModelChange();
+    if (changed) gameModelRef.notifyChanged(this);
 
     if (energy <= 0) {
       gameModelRef.remove(this);
@@ -48,7 +37,7 @@ class TreeModel extends PlantModel {
     );
   }
 
-  Future<bool> _seed() async {
+  bool _seed() {
     var percentage = Random().nextInt(100).toDouble() / 100;
     if (percentage > kGameConfiguration.plant.tree.seedPercentage) {
       return false;
@@ -69,7 +58,7 @@ class TreeModel extends PlantModel {
           if (patch.energy > kGameConfiguration.plant.tree.requiresMinWaterLevel) {
             // replace "anything" with the new tree
             if (plant != null) gameModelRef.remove(plant);
-            await gameModelRef.add(TreeModel(gameModelRef: gameModelRef, cell: cellCandidate));
+            gameModelRef.add(TreeModel(gameModelRef: gameModelRef, cell: cellCandidate));
             return true;
           }
         }

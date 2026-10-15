@@ -1,6 +1,4 @@
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/game/agent.dart';
-import 'package:echo_garden/game/objects/flower.dart';
 import 'package:echo_garden/model/objects/plant.dart';
 
 class FlowerModel extends PlantModel {
@@ -9,20 +7,11 @@ class FlowerModel extends PlantModel {
   }
 
   @override
-  AgentVisualization createVisualization() {
-    assert(visualization == null);
-    return visualization = FlowerTile(
-      agentModel: this,
-      position: cell * kGameConfiguration.world.tileSize,
-    );
-  }
-
-  @override
-  Future<void> step() async {
+  void step() {
     var changed = false;
     changed |= _grow();
 
-    if (changed) await visualization?.onModelChange();
+    if (changed) gameModelRef.notifyChanged(this);
 
     if (energy <= 0) {
       gameModelRef.remove(this);

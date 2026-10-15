@@ -10,4 +10,5 @@ export "objects/tree.dart";
 export "objects/water.dart";
 export "objects/weed.dart";
 export "layer.dart";
+export "listener.dart";
 export "game.dart";

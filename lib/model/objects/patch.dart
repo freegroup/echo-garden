@@ -10,5 +10,5 @@ abstract class PatchModel extends AgentModel {
   String get layerId => PatchModel.staticLayerId;
 
   @override
-  Future<void> step() async {}
+  void step() {}
 }
