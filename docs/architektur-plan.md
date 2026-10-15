@@ -23,7 +23,11 @@ Die **Darstellungen** (Grafik, Sound, später evtl. weitere) lesen diesen Zustan
 ## 1. Raum
 
 ### Koordinaten
-- Alle Positionen im Model sind **ganze Zahlen ohne Einheit**: eigener Typ `Pos(int x, int y)` mit `==`/`hashCode`. Er ersetzt `Vector2` im Model.
+- Alle Koordinaten sind **ganze Zahlen ohne Einheit**, auch beim Spieler. Zwei Typen ([cell.dart](../lib/model/cell.dart), [pos.dart](../lib/model/pos.dart)):
+  - `Cell(x, y)`: eine Kachel (Spalte, Zeile). Damit arbeiten Layer, Hasen, Pflanzen, `MovementStrategy`.
+  - `Pos(x, y)`: eine Position in Einheiten. Damit arbeiten Spieler und Sound.
+  - `pos.cell` liefert die Kachel, `cell.center` die Kachelmitte als `Pos`.
+- Nur die Grafik kennt Pixel: [pixels.dart](../lib/game/pixels.dart) mit `cellToPixel` und `posToPixel`.
 - Konfiguration (Model):
   ```dart
   grid: (
@@ -42,10 +46,44 @@ Die **Darstellungen** (Grafik, Sound, später evtl. weitere) lesen diesen Zustan
 | **frei** | Position wird übernommen | Spieler, Vögel, Autos, Reiter |
 | **Raster** | rastet auf die **Kachelmitte** ein: `x - x % gridWidth + gridWidth ~/ 2` | Boden, Pflanzen, Hasen, Häuser |
 
-- Positionen ändert **nur das Model**: `model.move(objekt, pos)` ruft `objekt.setXY()` auf und aktualisiert danach den Kachel-Index.
+- Umgesetzt: Raster-Objekte (`AgentModel`) speichern ihre `Cell`; ihre `position` ist immer `cell.center`. Damit ist das Einrasten eingebaut, ohne dass es ein `setXY()` braucht.
+- Positionen ändert **nur das Model**: `model.move(objekt, cell)` aktualisiert Objekt und Kachel-Index.
 - Raster-Objekte stehen im Kachel-Index (`Layer`, ein Objekt pro Kachel und Layer). Freie Objekte stehen in einer Liste; ihre Kachel wird bei Bedarf aus der Position berechnet.
 - Im Model gibt es **keine Glättung**: Hasen springen von Kachel zu Kachel.
 - Die **Grafik darf gleiten** lassen (Hasen bewegen sich weich zur neuen Kachel). Das ist reine Darstellung; das Model weiß davon nichts.
+
+### Layer, Höhe und Fortbewegung
+
+Layer-Ordnung, von unten nach oben (pro Kachel und Layer höchstens ein Objekt):
+
+```
+ 5  ActorModel       Hasen, später Füchse …
+ 4  PlantModel       Gras, Blumen, Unkraut, Bäume
+ 3  HeightAreaModel  optional: HeightAreaLow-, -Medium-, -HighModel   ← neu
+ 2  SeedableModel    Boden
+ 1  PatchModel       Wasser, flaches Wasser, Strand
+```
+
+- **`HeightAreaModel` ist optional:** Es liegt nur auf Bergkacheln, als einer von drei Typen: `HeightAreaLowModel`, `HeightAreaMediumModel`, `HeightAreaHighModel`. Boden ohne `HeightAreaModel` ist flaches Land.
+- **Das Model kennt keine Höhe als Zahl oder Stufe**, nur Objekttypen und **Verträglichkeiten**.
+- **Untergrund einer Kachel:** `model.groundAt(cell)` liefert den Typ des obersten Untergrunds: zuerst der HeightArea-Layer, sonst der Seedable-Layer (`SoilModel`), sonst der Patch-Layer (`BeachModel`, `FlatWaterModel`, `WaterModel`).
+- **Verträglichkeiten stehen als Listen von Typen in der Konfiguration**, z.B.:
+  ```dart
+  grass:   (growsOn: [SoilModel, HeightAreaLowModel]),
+  fir:     (growsOn: [HeightAreaLowModel, HeightAreaMediumModel]),
+  hopping: (canEnter: [SoilModel, HeightAreaLowModel]),
+  walking: (canEnter: [SoilModel, BeachModel, HeightAreaLowModel]),
+  seagull: (canEnter: [WaterModel, FlatWaterModel, BeachModel, SoilModel],
+            prefers:  [WaterModel, FlatWaterModel]),
+  ```
+- Pflanzen-Wachstum und Aussaat prüfen `growsOn`. (Die Tannen-Bilder `fir-01…04` sind schon da und werden noch nicht benutzt.)
+- Die Kartenerzeugung leitet die Berge aus der vorhandenen Höhenkarte (`diamondSquare`) ab: Die untersten Prozent werden wie heute Wasser, die obersten Prozent werden Berge der drei Typen. Die Anteile stehen in der Konfiguration. Die Höhenkarte selbst wird danach nicht gespeichert.
+- **Fortbewegungsart (`MovementMode`) entscheidet zu 100 %, wohin sich ein Objekt bewegen kann.** Das Objekt selbst prüft kein Gelände.
+  - `canEnter(model, cell)`: harte Grenze, prüft den Untergrund gegen die Liste `canEnter`.
+  - `preference(model, cell)`: Vorliebe zwischen erlaubten Kacheln, über die Liste `prefers` (z.B. Möwe lieber über Wasser).
+  - Arten als einfache Klassen, deren Listen in der Konfiguration stehen, z.B. `Walking`, `Running`, `Swimming`, `Hopping`, `Flying`.
+  - Belegung ist getrennt davon Sache des Wesens (ein Hase meidet Kacheln mit anderen Hasen; der Spieler als Beobachter nicht).
+- Der Spieler kann vorerst **nicht ins Wasser**: Er beherrscht nur gehen und rennen (rennen per Eingabe, gleicher Untergrund wie gehen). Schwimmen kann später als weitere Fortbewegungsart dazukommen; dann wählt er pro Schritt die erste Art, die die Zielkachel erlaubt. Erlaubt keine Art die Kachel, bleibt er stehen und gleitet an der Kante entlang (x und y getrennt prüfen); das gilt auch am Kartenrand.
 
 ## 2. Zeit
 
@@ -166,7 +204,7 @@ Stand: ✅ erledigt, 🔶 teilweise, ⏭️ übersprungen
 
 1. ⏭️ **Messen:** Rechenzeit eines Simulationsschritts bei voller Welt, getrennt nach Hasen und Pflanzen. Ergebnis bestimmt die Takt-Intervalle und zeigt, ob `maxCatchUp` über 20 Minuten hinaus erhöht werden kann.
 2. ✅ **Entkoppeln:** Zuhörer-Schnittstelle im Model statt `gameVisualization`; `createVisualization()`/`visualization` in eine Grafik-Factory verschieben; `async`/`await` aus der Simulation entfernen; das `assert` auf die Grafik in [rabbit.dart](../lib/model/actors/rabbit.dart) entfernen. Danach importiert `lib/model/` nichts mehr aus `lib/game/`.
-3. **Koordinaten:** `Pos(int, int)` einführen, `gridWidth`/`mapWidth`/`mapHeight` in die Konfiguration, Raster-Objekte mit Einrasten, `Layer` auf ganzzahlige Kachel-Schlüssel, Grafik rechnet in Pixel um. `Vector2`/Flame aus Model und `MovementStrategy` entfernen.
+3. ✅ **Koordinaten:** `Pos(int, int)` einführen, `gridWidth`/`mapWidth`/`mapHeight` in die Konfiguration, Raster-Objekte mit Einrasten, `Layer` auf ganzzahlige Kachel-Schlüssel, Grafik rechnet in Pixel um. `Vector2`/Flame aus Model und `MovementStrategy` entfernen.
 4. **Takte:** Takt-Klasse, Anmeldung pro Objekt, Hauptuhr mit Simulationszeit im Model; den Übergangs-Takt aus `GameSession` ins Model holen; Scheduler werden Optionen pro Takt; Pflanzenwachstum (`_grow`) in den Ökologie-Takt.
 5. 🔶 **Spieler, Darstellungen, Eingänge:**
    - ✅ `Player` als Beobachter außerhalb des Models, Basisklassen `Representation` und `InputDevice`, `GraphicsRepresentation`, `SoundRepresentation`, `KeyboardInputDevice`, `TouchInputDevice`, `GameSession`.
@@ -174,10 +212,22 @@ Stand: ✅ erledigt, 🔶 teilweise, ⏭️ übersprungen
 6. **Speichern und Vorspulen:** vollständige Serialisierung des dauerhaften Zustands (heute speichert `toJson` nur `size`), Zeitstempel, `AppLifecycleListener`, Vorspulen mit `maxCatchUp`, Schlafen/Aufwachen der Darstellungen.
 7. **Erstes flüchtiges Objekt:** ein Vogel, der an einem stehenden Spieler vorbeifliegt. Beweist freie Bewegung und räumlichen Sound.
 
+8. 🔶 **Untergrund und Fortbewegung:**
+   - ✅ `HeightAreaModel` mit drei Typen; Berge an Land aus der Höhenkarte, Felsinseln im Wasser (Gipfel in der Mitte, dann medium, dann low). Anteile und Inselgrößen in der Konfiguration. Kacheln von [tools/terrain_sprite.py](../tools/terrain_sprite.py).
+   - ✅ `model.groundTypeAt(cell)`, `MovementMode` (im Model) mit `canEnter`-Liste aus der Konfiguration.
+   - ✅ `walking` für den Spieler (Boden, Strand, low, medium); er gleitet an gesperrten Kacheln und am Kartenrand entlang.
+   - ✅ `hopping` für die Hasen (Boden, low), auch für die Startplätze. Der Hase prüft selbst nur noch, ob ein anderer Hase auf der Kachel sitzt.
+   - ✅ `growsOn` für Pflanzen (Wachstum und Aussaat prüfen den Untergrund). Drei Baumtypen, je ein Höhenband, damit die Grafik stimmt: `TreeModel` (Eiche, `tree-*`) auf Boden, `FirModel` (Tanne, `fir-*`) auf `low`, `PineModel` (Kiefer, `pine-*`, von [tools/pine_sprite.py](../tools/pine_sprite.py)) auf `medium`. Alle drei zählen zum Waldgeräusch. Bergbäume (Tanne, Kiefer) wachsen **licht**: ein Baum mit größeren Nachbarn im Umkreis wächst nicht, verliert Energie und stirbt, so dass auf Fels kein dichter Wald entsteht; die Eiche hat keine solche Grenze. Werte (`crowdingRadius`, `maxCrowdingEnergy`, `crowdingPenalty`) in der Konfiguration.
+   - ✅ Landschaftsgestaltung aus dem `GameModel`-Konstruktor in [terraformer.dart](../lib/model/terraformer/terraformer.dart) verschoben; [diamond_square.dart](../lib/model/terraformer/diamond_square.dart) bleibt der reine Höhenkarten-Algorithmus.
+   - ✅ Zusammenhängendes Land: [diamond_square.dart](../lib/model/terraformer/diamond_square.dart) mit Seed und ohne den alten Rand-Fehler. Der Terraformer flutet winzige Inseln, baut Landbrücken (3 Kacheln breit) zu größeren Stücken und prüft am Ende mit `walking`, ob jede begehbare Kachel erreichbar ist; sonst wird ein Durchgang gebaut (Gipfel wird medium, Wasser wird Boden). Felsinseln bleiben bewusst unerreichbar. `minIslandSize` in der Konfiguration, Seed in `GameModel`.
+   - offen: `prefers`; rennen; Vögel mit `flying`.
+
 Begleitend: Tests für das Model ohne Grafik und Sound (z.B. Hasenpopulation, Einrasten, Takt-Reihenfolge, Vorspulen = gleiches Ergebnis wie Normalbetrieb bei gleichem Zufalls-Seed).
 
 ## 8. Offene Punkte
 
+- Verträglichkeits-Listen pro Pflanzentyp und pro Fortbewegungsart; Anteile der drei Bergtypen auf der Karte.
+- Spieler: Geschwindigkeiten für gehen und rennen; welche Eingabe rennen auslöst.
 - Objekte größer als eine Kachel (Häuser, Fabriken): Der Kachel-Index erlaubt nur ein Objekt pro Kachel und Layer. Lösen, wenn Gebäude kommen.
 - Genaue Takt-Intervalle: nach der Messung in Schritt 1. `maxCatchUp` steht vorerst auf 20 Minuten; die Messung zeigt, ob mehr möglich ist.
 - Spielergeschwindigkeit: heute 250 px/s ≈ 4 Kacheln/s (Sprint). Für ein Hör-Spiel vermutlich deutlich langsamer.

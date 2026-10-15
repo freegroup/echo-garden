@@ -3,7 +3,6 @@ import 'dart:ui';
 
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/agent.dart';
-import 'package:echo_garden/game/game.dart';
 import 'package:flame/components.dart';
 
 class GrowingTileSquare extends AgentVisualization {

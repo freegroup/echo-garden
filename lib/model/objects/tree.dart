@@ -2,18 +2,26 @@ import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/model/agent.dart';
+import 'package:echo_garden/model/cell.dart';
 import 'package:echo_garden/model/objects/plant.dart';
 import 'package:echo_garden/model/objects/seedable.dart';
 import 'package:echo_garden/strategy/base.dart';
 import 'package:echo_garden/utils/random.dart';
-import 'package:flame/components.dart';
 
 class TreeModel extends PlantModel {
   late final MovementStrategy strategy;
 
   TreeModel({required super.gameModelRef, required super.cell, super.energy}) {
     strategy = MovementStrategy(model: gameModelRef);
-    energy = kGameConfiguration.plant.tree.initialEnergy;
+    energy = settings.initialEnergy;
+  }
+
+  // the values of this kind of tree in the configuration
+  TreeSettings get settings => kGameConfiguration.plant.tree;
+
+  // the young tree that grows from a seed of this tree
+  TreeModel createSeedling(Cell cell) {
+    return TreeModel(gameModelRef: gameModelRef, cell: cell);
   }
 
   @override
@@ -30,40 +38,96 @@ class TreeModel extends PlantModel {
   }
 
   bool _grow() {
+    // Bigger trees nearby take the light and water: this tree does not grow
+    // but loses energy and eventually dies. So mountains stay sparse, while
+    // the oak (with no crowding limit) can still form a dense forest.
+    if (_largerNeighborEnergy(cell, energy) > settings.maxCrowdingEnergy) {
+      energy -= settings.crowdingPenalty;
+      return true;
+    }
     return super.grow(
-      kGameConfiguration.plant.tree.growEnergy,
-      kGameConfiguration.plant.tree.maxEnergy,
-      kGameConfiguration.plant.tree.requiresMinWaterLevel,
+      settings.growEnergy,
+      settings.maxEnergy,
+      settings.requiresMinWaterLevel,
     );
+  }
+
+  // Summed energy of neighboring trees that are bigger than [ownEnergy].
+  double _largerNeighborEnergy(Cell center, double ownEnergy) {
+    double sum = 0;
+    Set<Cell> neighbors = strategy.getNeighborhood(
+      cell: center,
+      layerId: PlantModel.staticLayerId,
+      radius: settings.crowdingRadius,
+      emptyCellsLookup: false,
+    );
+    for (Cell neighbor in neighbors) {
+      AgentModel? plant = gameModelRef.getAgentAtCell(neighbor, PlantModel.staticLayerId);
+      if (plant is TreeModel && plant.energy > ownEnergy) {
+        sum += plant.energy;
+      }
+    }
+    return sum;
   }
 
   bool _seed() {
     var percentage = Random().nextInt(100).toDouble() / 100;
-    if (percentage > kGameConfiguration.plant.tree.seedPercentage) {
+    if (percentage > settings.seedPercentage) {
       return false;
     }
 
-    if (energy >= kGameConfiguration.plant.tree.seedEnergy) {
+    if (energy >= settings.seedEnergy) {
       var cells = strategy.getNeighborhood(
         cell: cell,
         layerId: PlantModel.staticLayerId,
         emptyCellsLookup: false,
       );
-      Vector2? cellCandidate = pickRandomElement(cells);
+      Cell? cellCandidate = pickRandomElement(cells);
       if (cellCandidate != null) {
         AgentModel? patch = gameModelRef.getAgentAtCell(cellCandidate, SeedableModel.staticLayerId);
         AgentModel? plant = gameModelRef.getAgentAtCell(cellCandidate, PlantModel.staticLayerId);
 
-        if (patch is SeedableModel && plant is! TreeModel) {
-          if (patch.energy > kGameConfiguration.plant.tree.requiresMinWaterLevel) {
+        bool growsThere = PlantModel.growsAt(gameModelRef, cellCandidate, settings.growsOn);
+        // a new seedling is tiny (energy 0), so every tree nearby counts: do
+        // not seed into a spot that is already crowded
+        bool crowded = _largerNeighborEnergy(cellCandidate, 0) > settings.maxCrowdingEnergy;
+        // trees and firs do not push each other away
+        if (patch is SeedableModel && plant is! TreeModel && growsThere && !crowded) {
+          if (patch.energy > settings.requiresMinWaterLevel) {
             // replace "anything" with the new tree
             if (plant != null) gameModelRef.remove(plant);
-            gameModelRef.add(TreeModel(gameModelRef: gameModelRef, cell: cellCandidate));
+            gameModelRef.add(createSeedling(cellCandidate));
             return true;
           }
         }
       }
     }
     return false;
+  }
+}
+
+/// A fir grows like a tree, but also higher up in the mountains.
+class FirModel extends TreeModel {
+  FirModel({required super.gameModelRef, required super.cell, super.energy});
+
+  @override
+  TreeSettings get settings => kGameConfiguration.plant.fir;
+
+  @override
+  TreeModel createSeedling(Cell cell) {
+    return FirModel(gameModelRef: gameModelRef, cell: cell);
+  }
+}
+
+/// A pine grows like a tree, but only on the medium mountains.
+class PineModel extends TreeModel {
+  PineModel({required super.gameModelRef, required super.cell, super.energy});
+
+  @override
+  TreeSettings get settings => kGameConfiguration.plant.pine;
+
+  @override
+  TreeModel createSeedling(Cell cell) {
+    return PineModel(gameModelRef: gameModelRef, cell: cell);
   }
 }

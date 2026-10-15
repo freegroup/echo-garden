@@ -4,12 +4,11 @@ import 'dart:ui';
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/game/agent.dart';
+import 'package:echo_garden/game/ground_renderer.dart';
 import 'package:echo_garden/game/layer.dart';
+import 'package:echo_garden/game/pixels.dart';
 import 'package:echo_garden/game/visualization_factory.dart';
 import 'package:echo_garden/model/index.dart';
-// requeried to load for extensions
-// ignore: unused_import
-import 'package:echo_garden/utils/extensions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
 import 'package:flutter/material.dart';
@@ -22,28 +21,32 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   final GameModel gameModel;
 
   late Vector2 _canvasSize;
-  late Vector2 _modelSize;
 
   // the tiles of all agents that are currently shown
   final Map<AgentModel, AgentVisualization> _visualizations = {};
 
   Rect _cellToShow = const Rect.fromLTWH(0, 0, 0, 0);
   late Map<String, TileLayer> _layersMap;
+  late final GroundRenderer _groundRenderer;
 
   WorldVisualization({required this.gameModel}) {
-    _modelSize = Vector2(kGameConfiguration.tileMap.width, kGameConfiguration.tileMap.width);
-    _canvasSize = _modelSize * kGameConfiguration.world.tileSize;
+    _canvasSize = cellToPixel(Cell(kGameConfiguration.grid.mapWidth, kGameConfiguration.grid.mapHeight));
 
+    _groundRenderer = GroundRenderer(gameModel: gameModel)
+      ..priority = 0
+      ..size = _canvasSize;
+
+    // the ground is drawn by the ground renderer; these layers hold the
+    // per-agent tiles that sit on top of it
     _layersMap = {
-      PatchModel.staticLayerId: TileLayer(priority: 0),
-      SeedableModel.staticLayerId: TileLayer(priority: 1),
-      PlantModel.staticLayerId: TileLayer(priority: 2),
-      ActorModel.staticLayerId: TileLayer(priority: 3),
+      PlantModel.staticLayerId: TileLayer(priority: 3),
+      ActorModel.staticLayerId: TileLayer(priority: 4),
     };
   }
 
   @override
   Future<void> onLoad() async {
+    add(_groundRenderer);
     addAll([..._layersMap.values]);
   }
 
@@ -66,8 +69,6 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   }
 
   void setCellsToShow(Rect cells) {
-    final stopwatch = Stopwatch()..start();
-
     // snap to multiple of 5 to avoid too much updates of the tilemap
     //
     double alignment = kGameConfiguration.world.tileSnap;
@@ -79,8 +80,8 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     alignedLeft = max(0, alignedLeft);
     alignedTop = max(0, alignedTop);
 
-    alignedRight = min(kGameConfiguration.tileMap.width - 1, alignedRight);
-    alignedBottom = min(kGameConfiguration.tileMap.height - 1, alignedBottom);
+    alignedRight = min(kGameConfiguration.grid.mapWidth - 1, alignedRight);
+    alignedBottom = min(kGameConfiguration.grid.mapHeight - 1, alignedBottom);
 
     cells = Rect.fromLTRB(alignedLeft, alignedTop, alignedRight, alignedBottom);
 
@@ -90,19 +91,13 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
 
     _cellToShow = cells;
 
-    final removeStart = stopwatch.elapsedMilliseconds;
     _visualizations.removeWhere((agentModel, visualization) {
-      if (_cellToShow.containsNotVector2(agentModel.cell)) {
+      if (!_isInView(agentModel.cell)) {
         visualization.removeFromParent();
         return true;
       }
       return false;
     });
-    final removeEnd = stopwatch.elapsedMilliseconds;
-    print('Time to remove squares: ${removeEnd - removeStart}ms');
-
-    // Add new components for cells now within cellsToShow
-    final addingStart = stopwatch.elapsedMilliseconds;
 
     // Calculate the range of cells within the visible area
     int startX = _cellToShow.left.floor();
@@ -110,37 +105,21 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     int endX = _cellToShow.right.ceil();
     int endY = _cellToShow.bottom.ceil();
 
-    // Adjust the iteration to only cover cells within the visible area
     for (int x = startX; x <= endX; x++) {
       for (int y = startY; y <= endY; y++) {
-        // Convert grid indices to Vector2 for compatibility with the rest of your code
-        Vector2 cell = Vector2(x.toDouble(), y.toDouble());
+        Cell cell = Cell(x, y);
 
-        // Fill up all visualization layers with the corresponding Model representations
-        //
+        // fill the per-agent layers (plants, rabbits) with their tiles
         for (var entry in _layersMap.entries) {
-          final layerId = entry.key;
-          final layer = entry.value;
-
-          try {
-            // Get the model for the layer at the cell
-            final agentModel = gameModel.getAgentAtCell(cell, layerId);
-            // Check if there is a model and not already a visualization is present
-            if (agentModel != null && !_visualizations.containsKey(agentModel)) {
-              _show(agentModel, layer);
-            }
-          } catch (e) {
-            print(e);
+          final agentModel = gameModel.getAgentAtCell(cell, entry.key);
+          if (agentModel != null &&
+              !isGroundCover(agentModel) &&
+              !_visualizations.containsKey(agentModel)) {
+            _show(agentModel, entry.value);
           }
         }
       }
     }
-
-    final addingEnd = stopwatch.elapsedMilliseconds;
-    print('Time to add new components: ${addingEnd - addingStart}ms');
-
-    stopwatch.stop();
-    print('Total operation time: ${stopwatch.elapsedMilliseconds}ms');
   }
 
   @override
@@ -158,6 +137,14 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
         _canvasSize.y - gameSize.y / 2,
       ),
     );
+  }
+
+  // the right and bottom edge belong to the visible area as well
+  bool _isInView(Cell cell) {
+    return cell.x >= _cellToShow.left &&
+        cell.x <= _cellToShow.right &&
+        cell.y >= _cellToShow.top &&
+        cell.y <= _cellToShow.bottom;
   }
 
   void _show(AgentModel agent, TileLayer layer) {
@@ -178,11 +165,15 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   }
 
   void showIfVisible(AgentModel agent) {
+    // the ground and the grass are drawn by the ground renderer, not per agent
+    TileLayer? layer = _layersMap[agent.layerId];
+    if (layer == null || isGroundCover(agent)) return;
+
     // only agents in the visible area get a tile
-    if (_cellToShow.containsVector2(agent.cell)) {
+    if (_isInView(agent.cell)) {
       // the agent was created right now, so it can't have a tile yet
       assert(!_visualizations.containsKey(agent));
-      _show(agent, _layersMap[agent.layerId]!);
+      _show(agent, layer);
     }
   }
 

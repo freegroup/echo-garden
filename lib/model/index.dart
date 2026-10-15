@@ -1,7 +1,10 @@
 export "agent.dart";
+export "cell.dart";
+export "pos.dart";
 export "actors/actor.dart";
 export "objects/flower.dart";
 export "objects/grass.dart";
+export "objects/height_area.dart";
 export "objects/patch.dart";
 export "objects/plant.dart";
 export "objects/seedable.dart";

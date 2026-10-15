@@ -1,31 +1,46 @@
 import 'package:echo_garden/model/agent.dart';
+import 'package:echo_garden/model/cell.dart';
 import 'package:echo_garden/model/game.dart';
-import 'package:flame/components.dart';
 
 class MovementStrategy {
   final GameModel model;
 
   MovementStrategy({required this.model});
 
-  Set<Vector2> getNeighborhood({
-    required Vector2 cell,
+  /// All cells of the map within the radius around a cell.
+  Set<Cell> getCellsAround({required Cell cell, int radius = 1, bool includeCenter = false}) {
+    Set<Cell> cells = {};
+    for (int dx = -radius; dx <= radius; dx++) {
+      for (int dy = -radius; dy <= radius; dy++) {
+        if (!includeCenter && dx == 0 && dy == 0) continue;
+        Cell around = Cell(cell.x + dx, cell.y + dy);
+        if (around.x >= 0 && around.x < model.width && around.y >= 0 && around.y < model.height) {
+          cells.add(around);
+        }
+      }
+    }
+    return cells;
+  }
+
+  Set<Cell> getNeighborhood({
+    required Cell cell,
     bool includeCenter = false,
     bool emptyCellsLookup = true,
     int radius = 1,
     required String layerId,
   }) {
-    Set<Vector2> cells = {};
+    Set<Cell> cells = {};
 
     for (int dx = -radius; dx <= radius; dx++) {
       for (int dy = -radius; dy <= radius; dy++) {
         if (!includeCenter && dx == 0 && dy == 0) continue; // Skip the center cell if not included
 
-        double newX = cell.x + dx;
-        double newY = cell.y + dy;
+        int newX = cell.x + dx;
+        int newY = cell.y + dy;
 
         // Check if the new position is within the world boundaries
         if (newX >= 0 && newX < model.width && newY >= 0 && newY < model.height) {
-          Vector2 newCell = Vector2(newX, newY);
+          Cell newCell = Cell(newX, newY);
 
           // Optionally check if there's an agent at the new cell position, depending on your requirements
           if ((model.getAgentAtCell(newCell, layerId) == null) == emptyCellsLookup) {
@@ -37,25 +52,25 @@ class MovementStrategy {
     return cells;
   }
 
-  Set<Vector2> getNeighborhoodByType({
-    required Vector2 cell,
+  Set<Cell> getNeighborhoodByType({
+    required Cell cell,
     bool includeCenter = false,
     int radius = 1,
     required Type type,
     required String layerId,
   }) {
-    Set<Vector2> cells = {};
+    Set<Cell> cells = {};
 
     for (int dx = -radius; dx <= radius; dx++) {
       for (int dy = -radius; dy <= radius; dy++) {
         if (!includeCenter && dx == 0 && dy == 0) continue; // Skip the center cell if not included
 
-        double newX = cell.x + dx;
-        double newY = cell.y + dy;
+        int newX = cell.x + dx;
+        int newY = cell.y + dy;
 
         // Check if the new position is within the world boundaries
         if (newX >= 0 && newX < model.width && newY >= 0 && newY < model.height) {
-          Vector2 newCell = Vector2(newX, newY);
+          Cell newCell = Cell(newX, newY);
 
           // Optionally check if there's an agent at the new cell position, depending on your requirements
           var foundAgent = model.getAgentAtCell(newCell, layerId);
@@ -69,7 +84,7 @@ class MovementStrategy {
   }
 
   bool isAgentTypeNeighborOnLayer({
-    required Vector2 cell,
+    required Cell cell,
     int radius = 1,
     required Type type,
     required String layerId,
@@ -78,12 +93,12 @@ class MovementStrategy {
       for (int dy = -radius; dy <= radius; dy++) {
         if (dx == 0 && dy == 0) continue; // Skip the center cell if not included
 
-        double newX = cell.x + dx;
-        double newY = cell.y + dy;
+        int newX = cell.x + dx;
+        int newY = cell.y + dy;
 
         // Check if the new position is within the world boundaries
         if (newX >= 0 && newX < model.width && newY >= 0 && newY < model.height) {
-          Vector2 newCell = Vector2(newX, newY);
+          Cell newCell = Cell(newX, newY);
           AgentModel? agentAtCell = model.getAgentAtCell(newCell, layerId);
           if (agentAtCell != null && agentAtCell.runtimeType == type) {
             return true;
@@ -94,24 +109,24 @@ class MovementStrategy {
     return false;
   }
 
-  Vector2? getNearestCellForAgentTypeOnLayer({
-    required Vector2 cell,
+  Cell? getNearestCellForAgentTypeOnLayer({
+    required Cell cell,
     int radius = 10,
     required Type type,
     required String layerId,
   }) {
     double nearestDistance = -1;
-    Vector2? nearestCell;
+    Cell? nearestCell;
     for (int dx = -radius; dx <= radius; dx++) {
       for (int dy = -radius; dy <= radius; dy++) {
         if (dx == 0 && dy == 0) continue; // Skip the center cell
 
-        double newX = cell.x + dx;
-        double newY = cell.y + dy;
+        int newX = cell.x + dx;
+        int newY = cell.y + dy;
 
         // Check if the new position is within the world boundaries
         if (newX >= 0 && newX < model.width && newY >= 0 && newY < model.height) {
-          Vector2 newCell = Vector2(newX, newY);
+          Cell newCell = Cell(newX, newY);
           AgentModel? agentAtCell = model.getAgentAtCell(newCell, layerId);
 
           if (agentAtCell != null && agentAtCell.runtimeType == type) {
@@ -129,7 +144,7 @@ class MovementStrategy {
   }
 
   double getAggregatedEnergyForAgentTypeOnLayer({
-    required Vector2 cell,
+    required Cell cell,
     int radius = 10,
     required Type type,
     required String layerId,
@@ -139,12 +154,12 @@ class MovementStrategy {
       for (int dy = -radius; dy <= radius; dy++) {
         if (dx == 0 && dy == 0) continue; // Skip the center cell
 
-        double newX = cell.x + dx;
-        double newY = cell.y + dy;
+        int newX = cell.x + dx;
+        int newY = cell.y + dy;
 
         // Check if the new position is within the world boundaries
         if (newX >= 0 && newX < model.width && newY >= 0 && newY < model.height) {
-          Vector2 newCell = Vector2(newX, newY);
+          Cell newCell = Cell(newX, newY);
           AgentModel? agentAtCell = model.getAgentAtCell(newCell, layerId);
 
           if (agentAtCell != null && agentAtCell.runtimeType == type) {

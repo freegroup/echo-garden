@@ -7,10 +7,13 @@ part of 'game.dart';
 // **************************************************************************
 
 GameModel _$GameModelFromJson(Map<String, dynamic> json) => GameModel(
-      size: const Vector2Converter()
-          .fromJson(json['size'] as Map<String, dynamic>),
+      width: (json['width'] as num).toInt(),
+      height: (json['height'] as num).toInt(),
+      seed: (json['seed'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$GameModelToJson(GameModel instance) => <String, dynamic>{
-      'size': const Vector2Converter().toJson(instance.size),
+      'width': instance.width,
+      'height': instance.height,
+      'seed': instance.seed,
     };

@@ -2,14 +2,17 @@ import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/model/index.dart';
+import 'package:echo_garden/model/movement_mode.dart';
 import 'package:echo_garden/strategy/base.dart';
 import 'package:echo_garden/utils/random.dart';
-import 'package:flame/components.dart';
 
 class RabbitAgent extends ActorModel {
   double birthThreshold = kGameConfiguration.rabbit.birthThreshold;
 
   late final MovementStrategy strategy;
+
+  // decides where the rabbit can hop
+  MovementMode movementMode = hopping;
 
   RabbitAgent({required super.gameModelRef, required super.cell, super.energy}) {
     strategy = MovementStrategy(model: gameModelRef);
@@ -32,23 +35,26 @@ class RabbitAgent extends ActorModel {
     }
   }
 
-  // Land cells in step range that no other actor occupies. The actor layer
-  // holds one agent per cell, so stepping onto a taken cell would overwrite it.
-  Set<Vector2> _freeCells({required bool includeCenter}) {
-    return strategy.getNeighborhood(
-      includeCenter: includeCenter,
-      emptyCellsLookup: false,
+  // Cells in step range the rabbit can hop to. The movement mode decides about
+  // the ground; the rabbit itself only avoids other rabbits, because the actor
+  // layer holds one agent per cell and stepping onto a taken cell would
+  // overwrite it.
+  Set<Cell> _freeCells({required bool includeCenter}) {
+    Set<Cell> cells = strategy.getCellsAround(
       cell: cell,
       radius: kGameConfiguration.rabbit.stepRadius,
-      layerId: SeedableModel.staticLayerId,
-    )..removeWhere((candidate) =>
+      includeCenter: includeCenter,
+    );
+    cells.removeWhere((candidate) => !movementMode.canEnterCell(gameModelRef, candidate));
+    cells.removeWhere((candidate) =>
         candidate != cell &&
         gameModelRef.getAgentAtCell(candidate, ActorModel.staticLayerId) != null);
+    return cells;
   }
 
   bool _move() {
-    Set<Vector2> possibleMoves = _freeCells(includeCenter: true);
-    Vector2? newCell = pickRandomElement(possibleMoves);
+    Set<Cell> possibleMoves = _freeCells(includeCenter: true);
+    Cell? newCell = pickRandomElement(possibleMoves);
     if (newCell != null) {
       gameModelRef.move(this, newCell);
       return true;
@@ -77,7 +83,7 @@ class RabbitAgent extends ActorModel {
   bool _reproduce() {
     if (energy > birthThreshold) {
       // the young one needs a cell of its own next to the parent
-      Vector2? birthCell = pickRandomElement(_freeCells(includeCenter: false));
+      Cell? birthCell = pickRandomElement(_freeCells(includeCenter: false));
       if (birthCell == null) {
         return false;
       }

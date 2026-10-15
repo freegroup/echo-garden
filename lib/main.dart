@@ -5,12 +5,8 @@ import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/screens/start_screen.dart';
 
 import 'package:flame/flame.dart';
-import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
-// requeried to load for extensions
-// ignore: unused_import
-import 'package:echo_garden/utils/extensions.dart';
 
 
 SoundProps? currentSound;
@@ -23,7 +19,7 @@ Future<void> main() async {
   await SoundEnvironment.init();
 
   GameModel model =
-      GameModel(size: Vector2(kGameConfiguration.tileMap.width, kGameConfiguration.tileMap.height));
+      GameModel(width: kGameConfiguration.grid.mapWidth, height: kGameConfiguration.grid.mapHeight);
   final session = GameSession(model);
   runApp(EchoGardenApp(session: session));
 }

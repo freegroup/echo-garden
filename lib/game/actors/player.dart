@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/game.dart';
+import 'package:echo_garden/game/pixels.dart';
 import 'package:echo_garden/player.dart';
 import 'package:flame/components.dart';
 import 'package:flame/particles.dart';
@@ -48,7 +48,7 @@ class PlayerSprite extends SpriteAnimationComponent with HasGameReference<GameVi
   }
 
   Vector2 _pixelPosition() {
-    return _player.position * kGameConfiguration.world.tileSize;
+    return posToPixel(_player.position);
   }
 
   @override

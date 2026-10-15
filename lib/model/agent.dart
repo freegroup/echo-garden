@@ -1,13 +1,15 @@
 import 'dart:math';
 
+import 'package:echo_garden/model/cell.dart';
 import 'package:echo_garden/model/game.dart';
-import 'package:flame/components.dart';
+import 'package:echo_garden/model/pos.dart';
 
-Vector2 zero = Vector2.all(0);
-
+/// An object of the model that lives on the grid: soil, plants, rabbits, ...
+///
+/// It always sits on a whole cell. Its position is the middle of that cell.
 class AgentModel {
   static String staticLayerId = "$AgentModel";
-  Vector2 cell;
+  Cell cell;
   double _energy;
   double minEnergy;
 
@@ -17,8 +19,9 @@ class AgentModel {
       {required this.gameModelRef, required this.cell, double energy = 0, this.minEnergy = 0})
       : _energy = energy;
 
-  // GameModel get gameModelRef => scheduler.gameModelRef;
   String get layerId => AgentModel.staticLayerId;
+
+  Pos get position => cell.center;
 
   double get energy => _energy;
 

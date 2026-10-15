@@ -3,26 +3,22 @@ import 'dart:math';
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/model/actors/rabbit.dart';
 import 'package:echo_garden/model/index.dart';
-import 'package:echo_garden/model/objects/beach.dart';
-import 'package:echo_garden/model/objects/flat_water.dart';
+import 'package:echo_garden/model/movement_mode.dart';
 import 'package:echo_garden/model/scheduler/base.dart';
 import 'package:echo_garden/model/scheduler/random_percent.dart';
-import 'package:echo_garden/model/terraformer/diamond_square.dart';
-import 'package:echo_garden/strategy/base.dart';
-import 'package:flame/game.dart';
-import 'package:flutter/foundation.dart';
+import 'package:echo_garden/model/terraformer/terraformer.dart';
 import 'package:json_annotation/json_annotation.dart';
-
-// requried to load for extensions
-// ignore: unused_import
-import 'package:echo_garden/utils/extensions.dart';
 
 part 'game.g.dart'; // This file is generated
 
 @JsonSerializable(explicitToJson: true)
 class GameModel {
-  @Vector2Converter()
-  final Vector2 size;
+  // size of the map in cells
+  final int width;
+  final int height;
+
+  // the same seed gives the same landscape; without a seed it is random
+  final int? seed;
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   late final BaseScheduler _rabbitScheduler;
@@ -36,139 +32,31 @@ class GameModel {
   @JsonKey(includeFromJson: false, includeToJson: false)
   late Map<String, Layer> layersMap;
 
-  int get width => size.x.toInt();
-  int get height => size.y.toInt();
-
-  @visibleForTesting
+  // used by tests
   int get rabbitCount => _rabbitScheduler.agents.length;
 
-  GameModel({required this.size}) {
+  GameModel({required this.width, required this.height, this.seed}) {
     layersMap = {
-      PatchModel.staticLayerId: Layer(size),
-      SeedableModel.staticLayerId: Layer(size),
-      PlantModel.staticLayerId: Layer(size),
-      ActorModel.staticLayerId: Layer(size),
+      PatchModel.staticLayerId: Layer(width, height),
+      SeedableModel.staticLayerId: Layer(width, height),
+      HeightAreaModel.staticLayerId: Layer(width, height),
+      PlantModel.staticLayerId: Layer(width, height),
+      ActorModel.staticLayerId: Layer(width, height),
     };
 
     _rabbitScheduler = RandomPercentScheduler(percent: 33, gameModelRef: this);
     _defaultScheduler = RandomPercentScheduler(percent: 53, gameModelRef: this);
     //_defaultScheduler = BaseScheduler(gameModelRef: this);
 
-    var heightMap = diamondSquare(size);
-
-    // Flatten the 2D heightMap into a sorted 1D list
-    List<double> sortedHeights = heightMap.expand((row) => row).toList();
-    sortedHeights.sort();
-
-    // Find the water threshold for the lowest 20%
-    int twentyPercentIndex =
-        (sortedHeights.length * (kGameConfiguration.world.waterPercentage / 100.0)).floor();
-    double waterThreshold = sortedHeights[twentyPercentIndex];
-    for (double x = 0; x < width; x++) {
-      for (double y = 0; y < height; y++) {
-        if (heightMap[x.toInt()][y.toInt()] < waterThreshold) {
-          add(WaterModel(gameModelRef: this, cell: Vector2(x, y)));
-        } else {
-          add(SoilModel(gameModelRef: this, cell: Vector2(x, y)));
-        }
-      }
-    }
-
-    // place beach tiles near to the water.
-    // this means convert "seedable" to "beach"
-    //
-    var placeChecker = MovementStrategy(model: this);
-    for (double x = 0; x < width; x++) {
-      for (double y = 0; y < height; y++) {
-        Vector2 cell = Vector2(x, y);
-        AgentModel? seedable = getAgentAtCell(cell, SeedableModel.staticLayerId);
-        // check of around of the seedable is water => convert to beach
-        if (seedable != null) {
-          if (placeChecker.isAgentTypeNeighborOnLayer(
-              cell: cell, layerId: PatchModel.staticLayerId, type: WaterModel)) {
-            remove(seedable);
-            add(BeachModel(gameModelRef: this, cell: cell));
-          }
-        }
-      }
-    }
-
-    // place flat-water tiles near to the beach.
-    // this means convert "seedable" to "beach"
-    //
-    for (double x = 0; x < width; x++) {
-      for (double y = 0; y < height; y++) {
-        Vector2 cell = Vector2(x, y);
-        AgentModel? water = getAgentAtCell(cell, PatchModel.staticLayerId);
-        // check of around of the seedable is water => convert to beach
-        if (water is WaterModel) {
-          if (placeChecker.isAgentTypeNeighborOnLayer(
-              cell: cell, layerId: PatchModel.staticLayerId, type: BeachModel)) {
-            remove(water);
-            add(FlatWaterModel(gameModelRef: this, cell: cell));
-          }
-        }
-      }
-    }
-
-    // place flat-water tiles near to the beach.
-    // this means convert "seedable" to "beach"
-    //
-    for (double x = 0; x < width; x++) {
-      for (double y = 0; y < height; y++) {
-        Vector2 cell = Vector2(x, y);
-        AgentModel? flatWater = getAgentAtCell(cell, PatchModel.staticLayerId);
-        // check of around of the seedable is water => convert to beach
-        if (flatWater is FlatWaterModel) {
-          var neighbours = placeChecker.getNeighborhoodByType(
-              cell: cell, layerId: PatchModel.staticLayerId, type: BeachModel);
-          if (neighbours.length > 5) {
-            remove(flatWater);
-            add(BeachModel(gameModelRef: this, cell: cell));
-          }
-        }
-      }
-    }
-    for (double x = 0; x < width; x++) {
-      for (double y = 0; y < height; y++) {
-        Vector2 cell = Vector2(x, y);
-        AgentModel? beach = getAgentAtCell(cell, PatchModel.staticLayerId);
-        // check of around of the seedable is water => convert to beach
-        if (beach is BeachModel) {
-          var neighbours = placeChecker.getNeighborhoodByType(
-              cell: cell, layerId: PatchModel.staticLayerId, type: FlatWaterModel);
-          if (neighbours.length > 5) {
-            remove(beach);
-            add(FlatWaterModel(gameModelRef: this, cell: cell));
-          }
-        }
-      }
-    }
-    for (double x = 0; x < width; x++) {
-      for (double y = 0; y < height; y++) {
-        Vector2 cell = Vector2(x, y);
-        AgentModel? water = getAgentAtCell(cell, PatchModel.staticLayerId);
-        // check of around of the seedable is water => convert to beach
-        if (water is WaterModel) {
-          var neighbours = placeChecker.getNeighborhoodByType(
-              cell: cell, layerId: PatchModel.staticLayerId, type: FlatWaterModel);
-          if (neighbours.length > 6) {
-            remove(water);
-            add(FlatWaterModel(gameModelRef: this, cell: cell));
-          }
-        }
-      }
-    }
+    Terraformer(this, seed: seed).shape();
 
     var numRabbits = 30;
     var random = Random();
     for (int i = 0; i < numRabbits; i++) {
-      double x = random.nextInt(width).toDouble();
-      double y = random.nextInt(height).toDouble();
-      Vector2 cell = Vector2(x, y);
-      AgentModel? landmark = getAgentAtCell(cell, SeedableModel.staticLayerId);
-      // do not place rabbits on the water or on top of another rabbit....
-      if (landmark != null && getAgentAtCell(cell, ActorModel.staticLayerId) == null) {
+      Cell cell = Cell(random.nextInt(width), random.nextInt(height));
+      // only where rabbits can hop, and not on top of another rabbit
+      if (hopping.canEnterCell(this, cell) &&
+          getAgentAtCell(cell, ActorModel.staticLayerId) == null) {
         add(RabbitAgent(gameModelRef: this, cell: cell));
       }
     }
@@ -206,7 +94,7 @@ class GameModel {
     }
   }
 
-  void move(AgentModel agent, Vector2 newCell) {
+  void move(AgentModel agent, Cell newCell) {
     layersMap[agent.layerId]?.move(agent, newCell);
     agent.cell = newCell;
     for (ModelListener listener in _listeners) {
@@ -222,13 +110,29 @@ class GameModel {
   }
 
   // Method to get a random agent of type T at a specific cell position
-  AgentModel? getAgentAtCell(Vector2 cell, String layerId) {
+  AgentModel? getAgentAtCell(Cell cell, String layerId) {
     var layer = layersMap[layerId];
     if (layer == null) {
       print("No layer found......ERROR");
       return null;
     }
     return layer.get(cell);
+  }
+
+  /// The type of the topmost ground of a cell: a mountain, else the soil,
+  /// else water or beach. Null for cells outside of the map.
+  Type? groundTypeAt(Cell cell) {
+    for (String layerId in [
+      HeightAreaModel.staticLayerId,
+      SeedableModel.staticLayerId,
+      PatchModel.staticLayerId,
+    ]) {
+      AgentModel? ground = getAgentAtCell(cell, layerId);
+      if (ground != null) {
+        return ground.runtimeType;
+      }
+    }
+    return null;
   }
 
   // Method to get a random agent of type T at a specific cell position
@@ -251,36 +155,41 @@ class GameModel {
     int totalWeed = (area * kGameConfiguration.plant.weed.growPercentage).toInt();
     int totalFlower = (area * kGameConfiguration.plant.flower.growPercentage).toInt();
     int totalTree = (area * kGameConfiguration.plant.tree.growPercentage).toInt();
+    int totalFir = (area * kGameConfiguration.plant.fir.growPercentage).toInt();
+    int totalPine = (area * kGameConfiguration.plant.pine.growPercentage).toInt();
 
     void placePlants(
-        {required Function(Vector2) placeFunction,
+        {required Function(Cell) placeFunction,
         required int total,
         int radius = 1,
-        required double minWaterEnergyLevel}) {
+        required double minWaterEnergyLevel,
+        required List<Type> growsOn}) {
       final random = Random();
       for (int i = 0; i < total; i++) {
         bool placed = false;
 
         // Randomly select a starting cell
-        int x = random.nextInt(size.x.toInt());
-        int y = random.nextInt(size.y.toInt());
+        int x = random.nextInt(width);
+        int y = random.nextInt(height);
 
         // Expand the search within the specified radius around the chosen cell
         for (int dx = -radius; dx <= radius && !placed; dx++) {
           for (int dy = -radius; dy <= radius && !placed; dy++) {
             // Ensure wrapping around the grid
-            double newX = ((x + dx + size.x) % size.x);
-            double newY = ((y + dy + size.y) % size.y);
-            Vector2 newCell = Vector2(newX, newY);
+            int newX = (x + dx + width) % width;
+            int newY = (y + dy + height) % height;
+            Cell newCell = Cell(newX, newY);
 
             // it is only possible to place "plants" on a seedable area
             //
             AgentModel? patch = getAgentAtCell(newCell, SeedableModel.staticLayerId);
             if (patch is SeedableModel) {
               // check that in this cell is not already a plant...first comes, first serves.
-              // ..and that the patch has enough water to seed.
+              // ..that the patch has enough water to seed, and that the plant
+              // gets along with the ground (e.g. no grass on high mountains).
               if (patch.energy > minWaterEnergyLevel &&
-                  getAgentAtCell(newCell, PlantModel.staticLayerId) == null) {
+                  getAgentAtCell(newCell, PlantModel.staticLayerId) == null &&
+                  PlantModel.growsAt(this, newCell, growsOn)) {
                 placeFunction(newCell);
                 placed = true;
               }
@@ -293,22 +202,38 @@ class GameModel {
     placePlants(
       total: totalGrass,
       minWaterEnergyLevel: kGameConfiguration.plant.grass.requiresMinWaterLevel,
+      growsOn: kGameConfiguration.plant.grass.growsOn,
       placeFunction: (cell) => add(GrassModel(gameModelRef: this, cell: cell)),
     );
     placePlants(
       total: totalWeed,
       minWaterEnergyLevel: kGameConfiguration.plant.weed.requiresMinWaterLevel,
+      growsOn: kGameConfiguration.plant.weed.growsOn,
       placeFunction: (cell) => add(WeedModel(gameModelRef: this, cell: cell)),
     );
     placePlants(
       total: totalFlower,
       minWaterEnergyLevel: kGameConfiguration.plant.flower.requiresMinWaterLevel,
+      growsOn: kGameConfiguration.plant.flower.growsOn,
       placeFunction: (cell) => add(FlowerModel(gameModelRef: this, cell: cell)),
     );
     placePlants(
       total: totalTree,
       minWaterEnergyLevel: kGameConfiguration.plant.tree.requiresMinWaterLevel,
+      growsOn: kGameConfiguration.plant.tree.growsOn,
       placeFunction: (cell) => add(TreeModel(gameModelRef: this, cell: cell)),
+    );
+    placePlants(
+      total: totalFir,
+      minWaterEnergyLevel: kGameConfiguration.plant.fir.requiresMinWaterLevel,
+      growsOn: kGameConfiguration.plant.fir.growsOn,
+      placeFunction: (cell) => add(FirModel(gameModelRef: this, cell: cell)),
+    );
+    placePlants(
+      total: totalPine,
+      minWaterEnergyLevel: kGameConfiguration.plant.pine.requiresMinWaterLevel,
+      growsOn: kGameConfiguration.plant.pine.growsOn,
+      placeFunction: (cell) => add(PineModel(gameModelRef: this, cell: cell)),
     );
 
     // Stop the stopwatch

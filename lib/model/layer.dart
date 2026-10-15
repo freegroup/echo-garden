@@ -1,36 +1,36 @@
 import 'package:echo_garden/model/agent.dart';
-import 'package:flame/game.dart';
+import 'package:echo_garden/model/cell.dart';
 
-class _IntVector2 {
-  final int x;
-  final int y;
-  _IntVector2(this.x, this.y);
-}
-
-_IntVector2 _toIntVector2(Vector2 v) {
-  return _IntVector2(v.x.toInt(), v.y.toInt());
-}
-
+/// One layer of the map: at most one agent per cell.
 class Layer {
-  final List<List<AgentModel?>> _grid; // Changed from Set<T> to T?
+  final int width;
+  final int height;
+  final List<List<AgentModel?>> _grid;
 
-  Layer(Vector2 size)
+  Layer(this.width, this.height)
       : _grid = List.generate(
-            size.x.toInt(), (_) => List.generate(size.y.toInt(), (_) => null, growable: false),
+            width, (_) => List.generate(height, (_) => null, growable: false),
             growable: false);
-  void add(Vector2 cell, AgentModel item) {
-    final ivCell = _toIntVector2(cell);
-    assert(_grid[ivCell.x][ivCell.y] == null, 'cell $cell is already occupied');
-    _grid[ivCell.x][ivCell.y] = item;
+
+  bool _isInside(Cell cell) {
+    return cell.x >= 0 && cell.y >= 0 && cell.x < width && cell.y < height;
   }
 
-  AgentModel? get(Vector2 cell) {
-    final ivCell = _toIntVector2(cell);
-    return _grid[ivCell.x][ivCell.y];
+  void add(Cell cell, AgentModel item) {
+    assert(_grid[cell.x][cell.y] == null, '$cell is already occupied');
+    _grid[cell.x][cell.y] = item;
+  }
+
+  /// The agent on the cell, or null. Cells outside of the map are empty.
+  AgentModel? get(Cell cell) {
+    if (!_isInside(cell)) {
+      return null;
+    }
+    return _grid[cell.x][cell.y];
   }
 
   bool remove(AgentModel agent) {
-    final cell = _toIntVector2(agent.cell);
+    Cell cell = agent.cell;
     if (_grid[cell.x][cell.y] == agent) {
       _grid[cell.x][cell.y] = null;
       return true;
@@ -38,25 +38,23 @@ class Layer {
     return false;
   }
 
-  bool move(AgentModel agent, Vector2 newCell) {
-    final oldCell = _toIntVector2(agent.cell);
-    final ivNewCell = _toIntVector2(newCell);
+  bool move(AgentModel agent, Cell newCell) {
+    Cell oldCell = agent.cell;
     if (_grid[oldCell.x][oldCell.y] == agent) {
       _grid[oldCell.x][oldCell.y] = null;
-      assert(_grid[ivNewCell.x][ivNewCell.y] == null, 'cell $newCell is already occupied');
-      _grid[ivNewCell.x][ivNewCell.y] = agent;
+      assert(_grid[newCell.x][newCell.y] == null, '$newCell is already occupied');
+      _grid[newCell.x][newCell.y] = agent;
       return true;
     }
     return false;
   }
 
-  Iterable<MapEntry<Vector2, AgentModel>> getNonEmptyCellsAndAgents() sync* {
-    for (int x = 0; x < _grid.length; x++) {
-      for (int y = 0; y < _grid[x].length; y++) {
-        var agent = _grid[x][y];
+  Iterable<MapEntry<Cell, AgentModel>> getNonEmptyCellsAndAgents() sync* {
+    for (int x = 0; x < width; x++) {
+      for (int y = 0; y < height; y++) {
+        AgentModel? agent = _grid[x][y];
         if (agent != null) {
-          var cell = Vector2(x.toDouble(), y.toDouble());
-          yield MapEntry(cell, agent);
+          yield MapEntry(Cell(x, y), agent);
         }
       }
     }

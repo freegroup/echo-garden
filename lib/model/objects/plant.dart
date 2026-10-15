@@ -1,6 +1,8 @@
 import 'dart:math';
 
 import 'package:echo_garden/model/agent.dart';
+import 'package:echo_garden/model/cell.dart';
+import 'package:echo_garden/model/game.dart';
 import 'package:echo_garden/model/objects/seedable.dart';
 
 abstract class PlantModel extends AgentModel {
@@ -10,6 +12,12 @@ abstract class PlantModel extends AgentModel {
 
   @override
   String get layerId => PlantModel.staticLayerId;
+
+  /// True if a plant that gets along with the given types of ground can grow
+  /// on the cell (see `growsOn` in the configuration).
+  static bool growsAt(GameModel model, Cell cell, List<Type> growsOn) {
+    return growsOn.contains(model.groundTypeAt(cell));
+  }
 
   @override
   void step() {}

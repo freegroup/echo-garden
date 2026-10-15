@@ -2,7 +2,9 @@ import 'dart:ui';
 
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/agent.dart';
+import 'package:echo_garden/game/pixels.dart';
 import 'package:echo_garden/model/actors/rabbit.dart';
+import 'package:echo_garden/model/cell.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flutter/animation.dart';
@@ -38,14 +40,14 @@ class RabbitTile extends AgentVisualization {
   MoveEffect? _moveEffect;
 
   RabbitView _view = RabbitView.front;
-  late Vector2 _lastCell;
+  late Cell _lastCell;
 
   final Paint _paint = Paint()..isAntiAlias = false;
 
   RabbitTile({required super.agentModel, required super.position})
       : super(anchor: Anchor.topLeft, size: Vector2.all(kGameConfiguration.world.tileSize)) {
     _furColor = _furColors[agentModel.hashCode % _furColors.length];
-    _lastCell = agentModel.cell.clone();
+    _lastCell = agentModel.cell;
   }
 
   @override
@@ -63,14 +65,14 @@ class RabbitTile extends AgentVisualization {
   Future<void> onModelChange() async {
     final model = agentModel as RabbitAgent;
 
-    Vector2 hop = model.cell - _lastCell;
-    _lastCell = model.cell.clone();
-    if (!hop.isZero()) {
+    Cell hop = model.cell - _lastCell;
+    _lastCell = model.cell;
+    if (hop.x != 0 || hop.y != 0) {
       _view = _viewForHop(hop);
       _showView();
     }
 
-    final targetPosition = model.cell * kGameConfiguration.world.tileSize;
+    final targetPosition = cellToPixel(model.cell);
     _moveEffect?.removeFromParent();
     _moveEffect = MoveEffect.to(
       targetPosition,
@@ -80,7 +82,7 @@ class RabbitTile extends AgentVisualization {
   }
 
   // y grows downwards: a hop with positive y comes towards the viewer.
-  RabbitView _viewForHop(Vector2 hop) {
+  RabbitView _viewForHop(Cell hop) {
     bool toRight = hop.x > 0;
     bool toLeft = hop.x < 0;
     bool towardsViewer = hop.y > 0;

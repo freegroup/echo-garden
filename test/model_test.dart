@@ -1,12 +1,12 @@
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/model/actors/rabbit.dart';
 import 'package:echo_garden/model/index.dart';
+import 'package:echo_garden/model/movement_mode.dart';
 import 'package:echo_garden/strategy/base.dart';
-import 'package:flame/components.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-GameModel newModel() => GameModel(
-    size: Vector2(kGameConfiguration.tileMap.width, kGameConfiguration.tileMap.height));
+GameModel newModel() =>
+    GameModel(width: kGameConfiguration.grid.mapWidth, height: kGameConfiguration.grid.mapHeight);
 
 List<RabbitAgent> rabbitsInGrid(GameModel model) => model
     .getLayer(ActorModel.staticLayerId)
@@ -15,24 +15,25 @@ List<RabbitAgent> rabbitsInGrid(GameModel model) => model
     .whereType<RabbitAgent>()
     .toList();
 
-// Land cells without a rabbit on them.
-List<Vector2> freeLandCells(GameModel model) => model
+// Cells a rabbit can hop to, without a rabbit on them.
+bool isFreeForRabbits(GameModel model, Cell cell) {
+  return hopping.canEnterCell(model, cell) &&
+      model.getAgentAtCell(cell, ActorModel.staticLayerId) == null;
+}
+
+List<Cell> freeLandCells(GameModel model) => model
     .getLayer(SeedableModel.staticLayerId)
     .getNonEmptyCellsAndAgents()
     .map((entry) => entry.key)
-    .where((cell) => model.getAgentAtCell(cell, ActorModel.staticLayerId) == null)
+    .where((cell) => isFreeForRabbits(model, cell))
     .toList();
 
-// A free land cell whose eight neighbors are free land as well.
-Vector2 openLandCell(GameModel model) {
+// A free cell whose eight neighbors are free for rabbits as well.
+Cell openLandCell(GameModel model) {
   final strategy = MovementStrategy(model: model);
-  return freeLandCells(model).firstWhere((cell) =>
-      strategy
-              .getNeighborhood(
-                  cell: cell, emptyCellsLookup: false, layerId: SeedableModel.staticLayerId)
-              .length ==
-          8 &&
-      strategy.getNeighborhood(cell: cell, layerId: ActorModel.staticLayerId).length == 8);
+  return freeLandCells(model).firstWhere((cell) => strategy
+      .getCellsAround(cell: cell)
+      .every((neighbor) => isFreeForRabbits(model, neighbor)));
 }
 
 // Records the events the model sends, as a representation would receive them.
@@ -75,6 +76,39 @@ void main() {
     model.add(RabbitAgent(gameModelRef: model, cell: openLandCell(model), energy: 5));
 
     expect(listener.events, isEmpty);
+  });
+
+  test('a rabbit never hops onto ground its movement mode does not allow', () {
+    final model = newModel();
+
+    for (var i = 0; i < 30; i++) {
+      model.step();
+    }
+
+    for (RabbitAgent rabbit in rabbitsInGrid(model)) {
+      expect(hopping.canEnterCell(model, rabbit.cell), isTrue, reason: '${rabbit.cell}');
+    }
+  });
+
+  test('a rabbit surrounded by high mountains stays where it is', () {
+    final model = newModel();
+    final start = openLandCell(model);
+    for (Cell neighbor in MovementStrategy(model: model).getCellsAround(cell: start)) {
+      // a neighbor may already be a low mountain, which rabbits can enter
+      AgentModel? oldArea = model.getAgentAtCell(neighbor, HeightAreaModel.staticLayerId);
+      if (oldArea != null) {
+        model.remove(oldArea);
+      }
+      model.add(HeightAreaMediumModel(gameModelRef: model, cell: neighbor));
+    }
+    final rabbit = RabbitAgent(gameModelRef: model, cell: start, energy: 5);
+    model.add(rabbit);
+
+    for (var i = 0; i < 10; i++) {
+      rabbit.step();
+    }
+
+    expect(rabbit.cell, start);
   });
 
   test('a rabbit without food starves', () {
