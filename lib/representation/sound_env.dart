@@ -11,7 +11,7 @@ final Map<Sound, String> _soundFiles = {
   Sound.ocean: "bg-ocean.mp3",
   Sound.campfire: "bg-campfire.mp3",
   Sound.blackForest: "bg-forest-black.mp3",
-  Sound.wind: "mtn_slope_jacket_hood_loop.wav",
+  Sound.wind: "mtn_slope_jacket_hood_loop.mp3",
 };
 
 final Map<Sound, Future<AudioPlayer>> _audioPlayers = {};
