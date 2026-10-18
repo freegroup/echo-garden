@@ -2,9 +2,9 @@ import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/model/actors/rabbit.dart';
+import 'package:echo_garden/model/clock.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/movement_mode.dart';
-import 'package:echo_garden/model/scheduler/base.dart';
 import 'package:echo_garden/model/scheduler/random_percent.dart';
 import 'package:echo_garden/model/terraformer/terraformer.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -20,11 +20,18 @@ class GameModel {
   // the same seed gives the same landscape; without a seed it is random
   final int? seed;
 
+  // the random numbers of the simulation, from the seed, so a run can be
+  // repeated (e.g. the breezes of the air)
   @JsonKey(includeFromJson: false, includeToJson: false)
-  late final BaseScheduler _rabbitScheduler;
+  late final Random random;
 
+  // the simulation time in milliseconds
   @JsonKey(includeFromJson: false, includeToJson: false)
-  late final BaseScheduler _defaultScheduler;
+  int now = 0;
+
+  // the clocks, in the order they run when several are due at once
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  late final Map<ClockKind, Clock> _clocks;
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   final List<ModelListener> _listeners = [];
@@ -33,25 +40,42 @@ class GameModel {
   late Map<String, Layer> layersMap;
 
   // used by tests
-  int get rabbitCount => _rabbitScheduler.agents.length;
+  int get rabbitCount => _clocks[ClockKind.animal]!.scheduler.agents.length;
 
   GameModel({required this.width, required this.height, this.seed}) {
+    random = Random(seed);
     layersMap = {
       PatchModel.staticLayerId: Layer(width, height),
       SeedableModel.staticLayerId: Layer(width, height),
       HeightAreaModel.staticLayerId: Layer(width, height),
       PlantModel.staticLayerId: Layer(width, height),
       ActorModel.staticLayerId: Layer(width, height),
+      AirModel.staticLayerId: Layer(width, height),
     };
 
-    _rabbitScheduler = RandomPercentScheduler(percent: 33, gameModelRef: this);
-    _defaultScheduler = RandomPercentScheduler(percent: 53, gameModelRef: this);
-    //_defaultScheduler = BaseScheduler(gameModelRef: this);
+    var clocks = kGameConfiguration.clocks;
+    _clocks = {
+      ClockKind.ecology: Clock(
+        kind: ClockKind.ecology,
+        intervalMs: clocks.ecology.intervalMs,
+        scheduler: RandomPercentScheduler(percent: clocks.ecology.percent, gameModelRef: this),
+        afterStep: _grow,
+      ),
+      ClockKind.animal: Clock(
+        kind: ClockKind.animal,
+        intervalMs: clocks.animal.intervalMs,
+        scheduler: RandomPercentScheduler(percent: clocks.animal.percent, gameModelRef: this),
+      ),
+      ClockKind.air: Clock(
+        kind: ClockKind.air,
+        intervalMs: clocks.air.intervalMs,
+        scheduler: RandomPercentScheduler(percent: clocks.air.percent, gameModelRef: this),
+      ),
+    };
 
     Terraformer(this, seed: seed).shape();
 
     var numRabbits = 30;
-    var random = Random();
     for (int i = 0; i < numRabbits; i++) {
       Cell cell = Cell(random.nextInt(width), random.nextInt(height));
       // only where rabbits can hop, and not on top of another rabbit
@@ -72,22 +96,14 @@ class GameModel {
 
   void add(AgentModel agent) {
     layersMap[agent.layerId]?.add(agent.cell, agent);
-    if (agent is RabbitAgent) {
-      _rabbitScheduler.add(agent);
-    } else {
-      _defaultScheduler.add(agent);
-    }
+    _clocks[agent.clock]!.scheduler.add(agent);
     for (ModelListener listener in _listeners) {
       listener.onAgentAdded(agent);
     }
   }
 
   void remove(AgentModel agent) {
-    if (agent is RabbitAgent) {
-      _rabbitScheduler.remove(agent);
-    } else {
-      _defaultScheduler.remove(agent);
-    }
+    _clocks[agent.clock]!.scheduler.remove(agent);
     layersMap[agent.layerId]?.remove(agent);
     for (ModelListener listener in _listeners) {
       listener.onAgentRemoved(agent);
@@ -140,10 +156,20 @@ class GameModel {
     return layersMap[layerId]!;
   }
 
+  /// Lets [ms] of simulation time pass: every clock takes the steps that are
+  /// due, in a fixed order.
+  void advance(int ms) {
+    now += ms;
+    for (Clock clock in _clocks.values) {
+      clock.advance(ms);
+    }
+  }
+
+  /// One step of every clock, right now (used by tests).
   void step() {
-    _defaultScheduler.step();
-    _rabbitScheduler.step();
-    _grow();
+    for (Clock clock in _clocks.values) {
+      clock.step();
+    }
   }
 
   void _grow() {

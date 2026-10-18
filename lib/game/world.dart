@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/game/agent.dart';
+import 'package:echo_garden/game/air_debug_renderer.dart';
 import 'package:echo_garden/game/ground_renderer.dart';
 import 'package:echo_garden/game/layer.dart';
 import 'package:echo_garden/game/pixels.dart';
@@ -28,6 +29,7 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   Rect _cellToShow = const Rect.fromLTWH(0, 0, 0, 0);
   late Map<String, TileLayer> _layersMap;
   late final GroundRenderer _groundRenderer;
+  late final AirDebugRenderer _airDebugRenderer;
 
   WorldVisualization({required this.gameModel}) {
     _canvasSize = cellToPixel(Cell(kGameConfiguration.grid.mapWidth, kGameConfiguration.grid.mapHeight));
@@ -47,6 +49,11 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   @override
   Future<void> onLoad() async {
     add(_groundRenderer);
+    // the wind arrows: above trees and rabbits, below the player (500)
+    _airDebugRenderer = AirDebugRenderer(gameModel: gameModel)
+      ..priority = 450
+      ..size = _canvasSize;
+    add(_airDebugRenderer);
     addAll([..._layersMap.values]);
   }
 
@@ -153,6 +160,11 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     // agent as visible, otherwise it would create a second visualization
     layer.add(visualization);
     _visualizations[agent] = visualization;
+  }
+
+  /// Shows or hides the wind arrows.
+  void toggleWindArrows() {
+    _airDebugRenderer.isShown = !_airDebugRenderer.isShown;
   }
 
   /// Removes all tiles. The next frame creates them again from the model.

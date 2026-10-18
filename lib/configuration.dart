@@ -19,9 +19,16 @@ typedef TreeSettings = ({
   int crowdingRadius,
   double maxCrowdingEnergy,
   double crowdingPenalty,
+  // how much fine dust the tree takes out of the air on its cell per step
+  double absorbsDust,
 });
 
 const kGameConfiguration = (
+  // views that help while developing; they only read the model
+  debug: (
+    showWind: true, // an arrow per cell in the direction of the wind
+    windArrowFullStrength: 1.0, // from this wind strength on the arrow is fully visible
+  ),
   // the model: positions are whole numbers without a unit
   grid: (
     gridWidth: 1000, // width of one cell in units; must be even, so the middle of a cell is whole
@@ -57,6 +64,83 @@ const kGameConfiguration = (
   player: (
     speed: 3900, // units per second (formerly 250 pixels per second at 64 pixels per cell)
     startBeachDistance: 3, // the player starts on land, at most this many cells away from a beach
+  ),
+  // the sounds around the player
+  sounds: (
+    // volume: 0..1, the loudest this sound gets
+    ocean: (
+      volume: 0.5, // at the beach; quieter further away
+    ),
+    forest: (
+      volume: 1.0, // in a dense forest; quieter with fewer trees around
+    ),
+    wind: (
+      volume: 1.0, // in full wind; quieter with less wind
+      radius: 1, // the wind of the player's cell and of the cells this far around is averaged
+      fullStrength: 1.0, // from this average wind strength on the wind sound is at full volume
+    ),
+  ),
+  // How often each kind of object takes a step, in milliseconds of simulation
+  // time, and which share of the objects (percent, picked at random) steps
+  // each time.
+  clocks: (
+    ecology: (intervalMs: 1300, percent: 53), // soil and plants
+    animal: (intervalMs: 1300, percent: 33), // rabbits
+    air: (intervalMs: 200, percent: 100), // wind and fine dust
+  ),
+  // every kind of air has its own values
+  //   windTransfer:   share of a cell's dust the wind carries on per step, at strength 1
+  //   windAdaptation: part of the way the wind moves towards the wind around it per step
+  air: (
+    sea: (
+      windTransfer: 0.25,
+      windAdaptation: 0.2,
+      initialHumidity: 0.8, // 0..1
+      initialTemperature: 14.0,
+    ),
+    land: (
+      windTransfer: 0.25,
+      windAdaptation: 0.2,
+      // The land makes no wind, it only lets it through: normally it slows the
+      // wind down (keeps windDamping of its strength per step), but now and
+      // then a cell lets the wind pass for up to gustMaxSteps steps.
+      windDamping: 0.96,
+      gustChance: 0.8, // chance to start letting the wind pass, when not already doing so
+      gustMaxSteps: 20,
+      initialHumidity: 0.5,
+      initialTemperature: 15.0,
+    ),
+    mountain: (
+      windTransfer: 0.25,
+      windAdaptation: 0.2,
+      windDamping: 0.5, // the wind keeps this share of its strength per step
+      initialHumidity: 0.4,
+      initialTemperature: 8.0,
+    ),
+    coast: (
+      windTransfer: 0.25,
+      windAdaptation: 0.2,
+      // the breeze towards the land rises or falls by breezeChange (share of the
+      // maximum) every step, for breezeRunMin..breezeRunMax steps in one direction
+      breezeMaxStrength: 1.0,
+      breezeChange: 0.05,
+      breezeRunMin: 5,
+      breezeRunMax: 30,
+      initialHumidity: 0.7,
+      initialTemperature: 15.0,
+    ),
+    foothill: (
+      windTransfer: 0.25,
+      windAdaptation: 0.2,
+      // the updraft towards the mountain rises or falls by updraftChange (share of
+      // the maximum) every step, for updraftRunMin..updraftRunMax steps in one direction
+      updraftMaxStrength: 1.0,
+      updraftChange: 0.05,
+      updraftRunMin: 5,
+      updraftRunMax: 30,
+      initialHumidity: 0.5,
+      initialTemperature: 13.0,
+    ),
   ),
   rabbit: (
     birthThreshold: 10.0,
@@ -120,6 +204,7 @@ const kGameConfiguration = (
       crowdingRadius: 1,
       maxCrowdingEnergy: 1000000.0, // no limit
       crowdingPenalty: 0.0,
+      absorbsDust: 0.5,
     ),
     // the fir: sparse on the low mountains
     fir: (
@@ -134,6 +219,7 @@ const kGameConfiguration = (
       crowdingRadius: 1,
       maxCrowdingEnergy: 20.0,
       crowdingPenalty: 5.0,
+      absorbsDust: 0.5,
     ),
     // the pine: the dark conifer, sparse on the medium mountains
     pine: (
@@ -148,6 +234,7 @@ const kGameConfiguration = (
       crowdingRadius: 1,
       maxCrowdingEnergy: 20.0,
       crowdingPenalty: 5.0,
+      absorbsDust: 0.5,
     ),
   )
 );

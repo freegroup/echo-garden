@@ -26,10 +26,8 @@ class GameSession {
   late final Ticker _ticker;
   Duration _lastElapsed = Duration.zero;
 
-  // Temporary: one model step every 1.3 seconds. Becomes the clocks of
-  // step 4 (see docs/architektur-plan.md).
-  static const double _modelStepInterval = 1.3;
-  double _timeSinceModelStep = 0;
+  // frame time not yet handed to the model, below one millisecond
+  double _pendingMs = 0;
 
   // A frame longer than this (e.g. after the app was paused) is shortened,
   // so the player does not jump. Catching up comes with step 6.
@@ -80,11 +78,11 @@ class GameSession {
 
     player.update(dt);
 
-    _timeSinceModelStep += dt;
-    if (_timeSinceModelStep >= _modelStepInterval) {
-      model.step();
-      _timeSinceModelStep -= _modelStepInterval;
-    }
+    // the model counts in whole milliseconds; keep the rest for the next frame
+    _pendingMs += dt * 1000;
+    int ms = _pendingMs.floor();
+    _pendingMs -= ms;
+    model.advance(ms);
 
     for (Representation representation in representations) {
       if (representation.isAwake) {

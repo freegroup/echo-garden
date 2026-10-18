@@ -1,4 +1,5 @@
 import 'package:echo_garden/model/agent.dart';
+import 'package:echo_garden/model/clock.dart';
 
 class ActorModel extends AgentModel {
   static String staticLayerId = "ActorModel";
@@ -7,4 +8,7 @@ class ActorModel extends AgentModel {
 
   @override
   String get layerId => ActorModel.staticLayerId;
+
+  @override
+  ClockKind get clock => ClockKind.animal;
 }

@@ -85,6 +85,25 @@ Layer-Ordnung, von unten nach oben (pro Kachel und Layer höchstens ein Objekt):
   - Belegung ist getrennt davon Sache des Wesens (ein Hase meidet Kacheln mit anderen Hasen; der Spieler als Beobachter nicht).
 - Der Spieler kann vorerst **nicht ins Wasser**: Er beherrscht nur gehen und rennen (rennen per Eingabe, gleicher Untergrund wie gehen). Schwimmen kann später als weitere Fortbewegungsart dazukommen; dann wählt er pro Schritt die erste Art, die die Zielkachel erlaubt. Erlaubt keine Art die Kachel, bleibt er stehen und gleitet an der Kante entlang (x und y getrennt prüfen); das gilt auch am Kartenrand.
 
+### Luft (`AirModel`)
+
+- Ein `AirModel` pro Zelle auf einem eigenen Luft-Layer, wie der Boden: **das Objekt hält die Werte, der Layer nur die Objekte.**
+- Mehr-Parameter-Objekt: Feinstaub, Luftfeuchtigkeit, Wärme, Wind. Wind = eine der 8 Himmelsrichtungen (`Direction`-`enum` in [direction.dart](../lib/model/direction.dart), jede Richtung kennt ihren Nachbar-Schritt) plus eine Stärke.
+- **Die Ausbreitung ist der Wind.** Im `step()` der Luft fragt eine Zelle ihre 8 Nachbarn: Zeigt der Wind des Nachbarn auf mich (`nachbar.cell + nachbar.windDirection.step == cell`), nehme ich einen Anteil seines Feinstaubs (Windstärke × `windTransfer` der Luftart). Ohne Wind bewegt sich nichts. Jede Zelle bläst zu genau einem Nachbarn, also wird nichts doppelt gezählt; die Gesamtmenge bleibt erhalten, am Kartenrand bleibt Staub liegen. Alle Luftzellen laufen jeden Schritt in neu gemischter Reihenfolge.
+- **Der Wind passt sich an.** Nach dem Staubtransport mittelt jede Luftzelle die Windvektoren ihrer Nachbarn (Richtung mit Länge 1 mal Stärke) und schiebt ihren eigenen Wind einen Teil des Weges dorthin (`windAdaptation` der Luftart). Aus dem Ergebnis wird wieder eine der 8 Richtungen (die mit dem größten Skalarprodukt) plus Stärke. Ein gleichmäßiger Wind bleibt stabil; ein starker Nachbar zwischen windstillen zieht nur anteilig.
+- **Luftarten:** `AirModel` ist abstrakt und hält nur die Werte. Jede Art rechnet ihr Verhalten in ihrem eigenen `step()`, es gibt keine gemeinsame Rechnung (so kann z.B. die Seeluft Feinstaub später anders behandeln):
+  - `AirSeaModel` (über Wasser): halbiert in jedem Schritt erst den eigenen Feinstaub und nimmt dann vom Nachbarn auf; über dem Meer klingt Feinstaub ab,
+  - `AirLandModel` (flaches Land): erzeugt keinen Wind, lässt ihn nur durch. Normalerweise bremst sie (`air.land.windDamping`); solange ihr `nopCount` läuft, bremst sie nicht. Ist er 0, startet mit `gustChance` ein neuer Durchlass mit zufälliger Länge 0..`gustMaxSteps`,
+  - `AirMountainModel` (über Bergen, bremst den Wind: `air.mountain.windDamping`),
+  - `AirCoastModel` (über Strand, Quelle der Brise Richtung Land; passt sich selbst nicht an die Nachbarn an),
+  - `AirFoothillModel` (Land am Fuß eines echten Bergs, `medium` oder `high`, Quelle des Aufwinds Richtung Berg; niedrige Hügel erzeugen keinen Wind).
+  - Brise und Aufwind ändern sich **glatt**: Für eine zufällige Anzahl Schritte (`breezeRunMin`..`breezeRunMax`) steigt oder fällt die Stärke jeden Schritt um `breezeChange` des Maximums, dann wird neu gewürfelt (rauf/runter, Länge). Kein Springen, kein Zappeln.
+  Jede Art in ihrer eigenen Datei `air_….dart` und mit eigenem Konfigurations-Knoten (`air.sea`, `air.land`, `air.mountain`, `air.coast`, `air.foothill`), inklusive eigener Startwerte für Feuchte und Wärme.
+- **Der Terraformer legt die Luft an** (als letzten Schritt, wenn die Landschaft fest ist). Er wählt die Art nach dem Untergrund und übergibt Strand- und Bergfuß-Luft ihre Richtung (`landward`, `mountainward`). Die Luft selbst weiß nichts über Boden und Berge.
+- Der Zufall der Simulation läuft über `model.random` mit dem Karten-Seed, damit ein Lauf wiederholbar ist.
+- **Die Luft kennt ihre Leser nicht.** Wer Luft liest oder verändert, entscheidet selbst: Der Baum zieht in seinem eigenen `step()` Feinstaub an seiner Zelle ab (`absorbsDust`), eine Fabrik wird später addieren. Schnittstelle: `addDust(menge)` mit Vorzeichen, unten bei 0 gekappt.
+- Geplant: wer den Wind setzt (z.B. ein Wetter-Service), Wärme und Feuchte wirken auf Wachstum und Brände; abgeleitete Zufriedenheit und der Minimum-Index (siehe GDD) lesen diese Werte.
+
 ## 2. Zeit
 
 ### Takte
@@ -205,7 +224,9 @@ Stand: ✅ erledigt, 🔶 teilweise, ⏭️ übersprungen
 1. ⏭️ **Messen:** Rechenzeit eines Simulationsschritts bei voller Welt, getrennt nach Hasen und Pflanzen. Ergebnis bestimmt die Takt-Intervalle und zeigt, ob `maxCatchUp` über 20 Minuten hinaus erhöht werden kann.
 2. ✅ **Entkoppeln:** Zuhörer-Schnittstelle im Model statt `gameVisualization`; `createVisualization()`/`visualization` in eine Grafik-Factory verschieben; `async`/`await` aus der Simulation entfernen; das `assert` auf die Grafik in [rabbit.dart](../lib/model/actors/rabbit.dart) entfernen. Danach importiert `lib/model/` nichts mehr aus `lib/game/`.
 3. ✅ **Koordinaten:** `Pos(int, int)` einführen, `gridWidth`/`mapWidth`/`mapHeight` in die Konfiguration, Raster-Objekte mit Einrasten, `Layer` auf ganzzahlige Kachel-Schlüssel, Grafik rechnet in Pixel um. `Vector2`/Flame aus Model und `MovementStrategy` entfernen.
-4. **Takte:** Takt-Klasse, Anmeldung pro Objekt, Hauptuhr mit Simulationszeit im Model; den Übergangs-Takt aus `GameSession` ins Model holen; Scheduler werden Optionen pro Takt; Pflanzenwachstum (`_grow`) in den Ökologie-Takt.
+4. 🔶 **Takte:** Takt-Klasse, Anmeldung pro Objekt, Hauptuhr mit Simulationszeit im Model; den Übergangs-Takt aus `GameSession` ins Model holen; Scheduler werden Optionen pro Takt; Pflanzenwachstum (`_grow`) in den Ökologie-Takt.
+   - ✅ Erster Teil umgesetzt ([clock.dart](../lib/model/clock.dart)): Jedes Objekt sagt mit `clock` selbst, auf welchem Takt es läuft (`ecology` als Standard, Hasen `animal`, Luft `air`). Jeder Takt hat ein Intervall in Simulationszeit (ganze ms) und einen Anteil, der pro Schritt zufällig rechnet (`clocks` in der Konfiguration). Das Model führt die Simulationszeit (`now`) und `advance(ms)`; die Takte laufen in fester Reihenfolge Ökologie → Tiere → Luft. Die Session gibt nur noch die Frame-Zeit weiter. Neues Pflanzenwachstum hängt am Ökologie-Takt. Luft läuft jetzt alle 200 ms statt 1300 ms.
+   - offen: Echtzeit- und Reaktions-Takt, Takt wechseln zur Laufzeit, Vorspulen über `advance`.
 5. 🔶 **Spieler, Darstellungen, Eingänge:**
    - ✅ `Player` als Beobachter außerhalb des Models, Basisklassen `Representation` und `InputDevice`, `GraphicsRepresentation`, `SoundRepresentation`, `KeyboardInputDevice`, `TouchInputDevice`, `GameSession`.
    - offen: Ereignis-Kanal ins Model (nach Schritt 4, weil Ereignisse am Taktanfang verarbeitet werden); Soundscape als reine Funktion; Hörradius pro Quelle; prüfen, ob `flutter_soloud` 3D-Audio mit Doppler zuverlässig unterstützt.

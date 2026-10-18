@@ -71,25 +71,31 @@ class GroundRenderer extends PositionComponent with HasGameReference<GameVisuali
     for (int rank = 0; rank < terrainOrder.length; rank++) {
       _layers.add(await _buildLayer(
         masks,
-        terrainImages[rank].map((n) => game.images.fromCache('$n.png')).toList(),
+        await _loadImages(terrainImages[rank]),
         (x, y) => rankAt(x, y) >= rank,
       ));
     }
 
     // ground cover on top of the terrain: grass, and dry (parched) grass
-    bool hasGrass(int x, int y) =>
-        _plantAt(x, y) is GrassModel;
-    bool hasParched(int x, int y) =>
-        _plantAt(x, y) is ParchedGrassModel;
+    bool hasGrass(int x, int y) => _plantAt(x, y) is GrassModel;
+    bool hasParched(int x, int y) => _plantAt(x, y) is ParchedGrassModel;
 
-    List<ui.Image> grass = ['grass-05', 'grass-06', 'grass-07']
-        .map((n) => game.images.fromCache('$n.png'))
-        .toList();
+    List<ui.Image> grass = await _loadImages(['grass-05', 'grass-06', 'grass-07']);
     _layers.add(await _buildLayer(masks, grass, hasParched, tint: const Color(0xFFAEA24B)));
     _layers.add(await _buildLayer(masks, grass, hasGrass));
 
     _ready = true;
   }
+
+  // Loads the images, fetching any that were not preloaded.
+  Future<List<ui.Image>> _loadImages(List<String> names) async {
+    List<ui.Image> images = [];
+    for (String name in names) {
+      images.add(await game.images.load('$name.png'));
+    }
+    return images;
+  }
+
 
   AgentModel? _plantAt(int x, int y) {
     if (x < 0 || y < 0 || x >= gameModel.width || y >= gameModel.height) return null;
@@ -130,11 +136,24 @@ class GroundRenderer extends PositionComponent with HasGameReference<GameVisuali
         // fully covered: a full tile, variant chosen stably by position
         List<ui.Image> variants = layer.variants;
         ui.Image full = variants[(cornerX * 7 + cornerY * 13) % variants.length];
-        canvas.drawImage(full, Offset(left, top), Paint());
+        _drawTile(canvas, full, left, top);
       } else {
-        canvas.drawImage(layer.edge[mask]!, Offset(left, top), Paint());
+        _drawTile(canvas, layer.edge[mask]!, left, top);
       }
     }
+  }
+
+  // Draws a tile one pixel larger than its cell, so neighboring tiles overlap.
+  // Without this overlap, the camera's smooth (sub-pixel) scrolling leaves a
+  // thin seam between tiles that shows up as a flickering grid.
+  final Paint _tilePaint = Paint()
+    ..isAntiAlias = false
+    ..filterQuality = FilterQuality.none;
+  static const Rect _tileSource = Rect.fromLTWH(0, 0, 64, 64); // one tile, 64x64
+
+  void _drawTile(Canvas canvas, ui.Image image, double left, double top) {
+    Rect dst = Rect.fromLTWH(left, top, _tile + 1.0, _tile + 1.0);
+    canvas.drawImageRect(image, _tileSource, dst, _tilePaint);
   }
 
   // ---- building the layers and the 16 masks, once ----

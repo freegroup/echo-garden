@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/model/agent.dart';
+import 'package:echo_garden/model/objects/air.dart';
 import 'package:echo_garden/model/cell.dart';
 import 'package:echo_garden/model/objects/plant.dart';
 import 'package:echo_garden/model/objects/seedable.dart';
@@ -29,11 +30,21 @@ class TreeModel extends PlantModel {
     bool changed = false;
     changed |= _grow();
     changed |= _seed();
+    _cleanAir();
 
     if (changed) gameModelRef.notifyChanged(this);
 
     if (energy <= 0) {
       gameModelRef.remove(this);
+    }
+  }
+
+  // The tree takes a little fine dust out of the air on its cell. The air
+  // does not know about trees; the tree decides to read and change it.
+  void _cleanAir() {
+    AgentModel? air = gameModelRef.getAgentAtCell(cell, AirModel.staticLayerId);
+    if (air is AirModel) {
+      air.addDust(-settings.absorbsDust);
     }
   }
 

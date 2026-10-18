@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:echo_garden/model/cell.dart';
+import 'package:echo_garden/model/clock.dart';
 import 'package:echo_garden/model/game.dart';
 import 'package:echo_garden/model/pos.dart';
 
@@ -20,6 +21,9 @@ class AgentModel {
       : _energy = energy;
 
   String get layerId => AgentModel.staticLayerId;
+
+  /// The clock this object takes its steps on.
+  ClockKind get clock => ClockKind.ecology;
 
   Pos get position => cell.center;
 

@@ -1,7 +1,14 @@
 export "agent.dart";
 export "cell.dart";
+export "direction.dart";
 export "pos.dart";
 export "actors/actor.dart";
+export "objects/air.dart";
+export "objects/air_coast.dart";
+export "objects/air_foothill.dart";
+export "objects/air_land.dart";
+export "objects/air_mountain.dart";
+export "objects/air_sea.dart";
 export "objects/flower.dart";
 export "objects/grass.dart";
 export "objects/height_area.dart";
