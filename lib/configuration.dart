@@ -32,8 +32,8 @@ const kGameConfiguration = (
   // the model: positions are whole numbers without a unit
   grid: (
     gridWidth: 1000, // width of one cell in units; must be even, so the middle of a cell is whole
-    mapWidth: 150, // width of the map in cells
-    mapHeight: 150, // height of the map in cells
+    mapWidth: 300, // width of the map in cells
+    mapHeight: 300, // height of the map in cells
   ),
   // the graphics
   tileMap: (
@@ -64,6 +64,11 @@ const kGameConfiguration = (
   player: (
     speed: 3900, // units per second (formerly 250 pixels per second at 64 pixels per cell)
     startBeachDistance: 3, // the player starts on land, at most this many cells away from a beach
+    // touch control (TrackPoint style): the finger offset from where it first
+    // touched is the direction and speed; within touchDeadZone nothing moves,
+    // at touchFullSpeed pixels the player runs at full speed
+    touchDeadZone: 20.0,
+    touchFullSpeed: 140.0,
   ),
   // the sounds around the player
   sounds: (
@@ -78,6 +83,20 @@ const kGameConfiguration = (
       volume: 1.0, // in full wind; quieter with less wind
       radius: 1, // the wind of the player's cell and of the cells this far around is averaged
       fullStrength: 1.0, // from this average wind strength on the wind sound is at full volume
+    ),
+    steps: (
+      volume: 0.8, // while walking
+      ahead: 0.5, // the steps are heard this many cells ahead, in the walking direction
+    ),
+    // The sound space (see SoundManager). The listener always faces north (up
+    // on the map): what is east is heard in the right ear, what is west in the
+    // left one, and what is south is behind, so it sounds duller and lower.
+    space: (
+      frontCutoff: 16000.0, // Hz, the low-pass filter in front: lets everything through
+      rearCutoff: 1200.0, // Hz, the low-pass filter straight behind: duller
+      rearPitchDrop: 0.06, // straight behind a sound is this much lower (0.06 = 6%)
+      speedOfSound: 343.0, // cells per second, for the Doppler effect
+      dopplerFactor: 1.0, // 1 = like in nature, more makes the Doppler effect stronger
     ),
   ),
   // How often each kind of object takes a step, in milliseconds of simulation

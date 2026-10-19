@@ -2,7 +2,9 @@ import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/movement_mode.dart';
 import 'package:echo_garden/model/objects/beach.dart';
+import 'package:echo_garden/model/publisher.dart';
 import 'package:echo_garden/player.dart';
+import 'package:echo_garden/representation/world_view.dart';
 import 'package:echo_garden/strategy/base.dart';
 import 'package:flame/components.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -40,6 +42,10 @@ GameModel landModel() {
   return model;
 }
 
+// What the player knows about the model: built from its messages, after the
+// test has decided what lies where.
+WorldView viewOf(GameModel model) => WorldView(ModelPublisher(model).snapshot());
+
 // Walks for the given time in small frames, like the game does.
 void walk(Player player, double seconds) {
   const double frame = 1 / 60;
@@ -51,7 +57,7 @@ void walk(Player player, double seconds) {
 void main() {
   test('the player walks in the direction the input device set', () {
     final model = landModel();
-    final player = Player(model: model, position: const Cell(2, 2).center);
+    final player = Player(worldView: viewOf(model), position: const Cell(2, 2).center);
     final start = player.position;
 
     player.direction = Vector2(1, 0);
@@ -62,7 +68,7 @@ void main() {
 
   test('positions stay whole numbers, also for a joystick pushed halfway', () {
     final model = landModel();
-    final player = Player(model: model, position: const Cell(5, 5).center);
+    final player = Player(worldView: viewOf(model), position: const Cell(5, 5).center);
     final start = player.position;
 
     player.direction = Vector2(0.5, -0.25);
@@ -74,7 +80,7 @@ void main() {
 
   test('a player without direction stands still', () {
     final model = landModel();
-    final player = Player(model: model, position: const Cell(5, 5).center);
+    final player = Player(worldView: viewOf(model), position: const Cell(5, 5).center);
     final start = player.position;
 
     player.update(1.0);
@@ -85,7 +91,7 @@ void main() {
   test('the player cannot walk into the water', () {
     final model = landModel();
     makeWater(model, const Cell(6, 5));
-    final player = Player(model: model, position: const Cell(5, 5).center);
+    final player = Player(worldView: viewOf(model), position: const Cell(5, 5).center);
 
     player.direction = Vector2(1, 0);
     walk(player, 1.0);
@@ -95,7 +101,7 @@ void main() {
 
   test('the player cannot leave the map', () {
     final model = landModel();
-    final player = Player(model: model, position: const Cell(0, 0).center);
+    final player = Player(worldView: viewOf(model), position: const Cell(0, 0).center);
 
     player.direction = Vector2(-1, -1);
     walk(player, 1.0);
@@ -109,7 +115,7 @@ void main() {
     for (int y = 0; y < 10; y++) {
       makeWater(model, Cell(6, y));
     }
-    final player = Player(model: model, position: const Cell(5, 2).center);
+    final player = Player(worldView: viewOf(model), position: const Cell(5, 2).center);
 
     // diagonal towards the water: right is blocked, down is free
     player.direction = Vector2(1, 1);
@@ -123,7 +129,7 @@ void main() {
     final model = GameModel(
         width: kGameConfiguration.grid.mapWidth, height: kGameConfiguration.grid.mapHeight);
 
-    final player = Player.onLandNearBeach(model);
+    final player = Player.onLandNearBeach(viewOf(model));
     final cell = player.position.cell;
 
     expect(model.getAgentAtCell(cell, SeedableModel.staticLayerId), isNotNull,

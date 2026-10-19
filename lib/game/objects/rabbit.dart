@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/agent.dart';
 import 'package:echo_garden/game/pixels.dart';
-import 'package:echo_garden/model/actors/rabbit.dart';
 import 'package:echo_garden/model/cell.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
@@ -44,10 +43,10 @@ class RabbitTile extends AgentVisualization {
 
   final Paint _paint = Paint()..isAntiAlias = false;
 
-  RabbitTile({required super.agentModel, required super.position})
+  RabbitTile({required super.agent, required super.position})
       : super(anchor: Anchor.topLeft, size: Vector2.all(kGameConfiguration.world.tileSize)) {
-    _furColor = _furColors[agentModel.hashCode % _furColors.length];
-    _lastCell = agentModel.cell;
+    _furColor = _furColors[agent.id % _furColors.length];
+    _lastCell = agent.cell;
   }
 
   @override
@@ -63,16 +62,14 @@ class RabbitTile extends AgentVisualization {
 
   @override
   Future<void> onModelChange() async {
-    final model = agentModel as RabbitAgent;
-
-    Cell hop = model.cell - _lastCell;
-    _lastCell = model.cell;
+    Cell hop = agent.cell - _lastCell;
+    _lastCell = agent.cell;
     if (hop.x != 0 || hop.y != 0) {
       _view = _viewForHop(hop);
       _showView();
     }
 
-    final targetPosition = cellToPixel(model.cell);
+    final targetPosition = cellToPixel(agent.cell);
     _moveEffect?.removeFromParent();
     _moveEffect = MoveEffect.to(
       targetPosition,

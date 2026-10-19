@@ -29,6 +29,10 @@ class GameModel {
   @JsonKey(includeFromJson: false, includeToJson: false)
   int now = 0;
 
+  // how many steps the air has taken; readers see from it when the wind changed
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  int airSteps = 0;
+
   // the clocks, in the order they run when several are due at once
   @JsonKey(includeFromJson: false, includeToJson: false)
   late final Map<ClockKind, Clock> _clocks;
@@ -70,6 +74,7 @@ class GameModel {
         kind: ClockKind.air,
         intervalMs: clocks.air.intervalMs,
         scheduler: RandomPercentScheduler(percent: clocks.air.percent, gameModelRef: this),
+        afterStep: () => airSteps++,
       ),
     };
 

@@ -22,16 +22,13 @@ class RabbitAgent extends ActorModel {
 
   @override
   void step() {
-    bool changed = false;
-    changed |= _move();
-    changed |= _eat();
-    changed |= _reproduce();
+    _move();
+    _eat();
+    _reproduce();
     energy = energy + kGameConfiguration.rabbit.energyPerStep;
     // the energy setter never goes below zero, so zero means starved
     if (energy <= 0) {
       gameModelRef.remove(this);
-    } else if (changed) {
-      gameModelRef.notifyChanged(this);
     }
   }
 
@@ -71,8 +68,6 @@ class RabbitAgent extends ActorModel {
         patch.energy -= diff;
         if (patch.energy <= 0) {
           gameModelRef.remove(patch);
-        } else {
-          gameModelRef.notifyChanged(patch);
         }
         return true;
       }

@@ -7,6 +7,7 @@ import 'package:echo_garden/game/objects/weed.dart';
 import 'package:echo_garden/game/pixels.dart';
 import 'package:echo_garden/model/actors/rabbit.dart';
 import 'package:echo_garden/model/index.dart';
+import 'package:echo_garden/representation/world_view.dart';
 import 'package:flame/components.dart';
 
 /// Creates the graphical tile for a model agent.
@@ -14,27 +15,27 @@ import 'package:flame/components.dart';
 /// Only the agents that sit on top of the ground are made here (plants and
 /// rabbits). The ground itself (water, beach, soil, mountains) is drawn by the
 /// GroundRenderer.
-AgentVisualization createVisualization(AgentModel agent, GameModel gameModel) {
+AgentVisualization createVisualization(AgentView agent) {
   Vector2 position = cellToPixel(agent.cell);
+  Type type = agent.type;
 
-  if (agent is RabbitAgent) {
-    return RabbitTile(agentModel: agent, position: position);
+  if (type == RabbitAgent) {
+    return RabbitTile(agent: agent, position: position);
   }
-  // firs and pines are trees as well, so they must be checked first
-  if (agent is PineModel) {
-    return PineTile(agentModel: agent, position: position);
+  if (type == PineModel) {
+    return PineTile(agent: agent, position: position);
   }
-  if (agent is FirModel) {
-    return FirTile(agentModel: agent, position: position);
+  if (type == FirModel) {
+    return FirTile(agent: agent, position: position);
   }
-  if (agent is TreeModel) {
-    return TreeTile(agentModel: agent, position: position);
+  if (type == TreeModel) {
+    return TreeTile(agent: agent, position: position);
   }
-  if (agent is FlowerModel) {
-    return FlowerTile(agentModel: agent, position: position);
+  if (type == FlowerModel) {
+    return FlowerTile(agent: agent, position: position);
   }
-  if (agent is WeedModel) {
-    return WeedTile(agentModel: agent, position: position);
+  if (type == WeedModel) {
+    return WeedTile(agent: agent, position: position);
   }
 
   // unknown agent type: show it as a red square, so it is easy to spot

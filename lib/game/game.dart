@@ -1,7 +1,7 @@
 import 'package:echo_garden/game/actors/player.dart';
 import 'package:echo_garden/game/world.dart';
-import 'package:echo_garden/model/game.dart';
 import 'package:echo_garden/player.dart';
+import 'package:echo_garden/representation/world_view.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 
@@ -12,24 +12,15 @@ class GameVisualization extends FlameGame {
   final WorldVisualization world;
   late final PlayerSprite player;
 
-  // The joystick of the touch input device, if there is one. It is drawn on
-  // top of the world, so it does not move with the camera.
-  GameVisualization(
-      {required GameModel gameModel, required Player player, JoystickComponent? joystick})
-      : world = WorldVisualization(gameModel: gameModel) {
+  GameVisualization({required WorldView worldView, required Player player})
+      : world = WorldVisualization(worldView: worldView) {
     cameraComponent = CameraComponent(world: world);
 
     this.player = PlayerSprite(player: player);
     world.add(this.player);
 
-    if (joystick != null) {
-      cameraComponent.viewport.add(joystick);
-    }
-
     cameraComponent.follow(this.player);
   }
-
-  GameModel get gameModel => world.gameModel;
 
   @override
   Future<void> onLoad() async {

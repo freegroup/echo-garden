@@ -2,7 +2,7 @@ import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/movement_mode.dart';
 import 'package:echo_garden/model/objects/beach.dart';
-import 'package:echo_garden/strategy/base.dart';
+import 'package:echo_garden/representation/world_view.dart';
 import 'package:flame/components.dart';
 
 /// The player: an observer of the world.
@@ -11,8 +11,8 @@ import 'package:flame/components.dart';
 /// where the listener stands, but does not change the world (yet). Input
 /// devices set the direction; the session moves the player every frame.
 class Player {
-  // the player reads the model to know where it can walk
-  final GameModel model;
+  // the player reads the world view to know where it can walk
+  final WorldView worldView;
 
   // position in units, like everything in the world
   Pos position;
@@ -24,39 +24,38 @@ class Player {
   // coordinate, so it may have a fraction (a joystick can be pushed halfway).
   Vector2 direction = Vector2.zero();
 
-  Player({required this.model, required this.position});
+  Player({required this.worldView, required this.position});
 
   /// Creates the player on land where it can walk, close to a beach. Of all such cells the one
   /// nearest to the middle of the map is taken, so the camera is not stuck at
   /// the border. Without any beach the player starts in the middle of the map.
-  factory Player.onLandNearBeach(GameModel model) {
-    MovementStrategy strategy = MovementStrategy(model: model);
-    Cell middle = Cell(model.width ~/ 2, model.height ~/ 2);
+  factory Player.onLandNearBeach(WorldView worldView) {
+    Cell middle = Cell(worldView.width ~/ 2, worldView.height ~/ 2);
 
     List<Cell> cells = [];
-    for (int x = 0; x < model.width; x++) {
-      for (int y = 0; y < model.height; y++) {
+    for (int x = 0; x < worldView.width; x++) {
+      for (int y = 0; y < worldView.height; y++) {
         cells.add(Cell(x, y));
       }
     }
     cells.sort((a, b) => a.distanceTo(middle).compareTo(b.distanceTo(middle)));
 
     for (Cell cell in cells) {
-      bool isLand = model.getAgentAtCell(cell, SeedableModel.staticLayerId) != null;
-      if (!isLand || !walking.canEnterCell(model, cell)) {
+      bool isLand = worldView.agentAt(cell, SeedableModel.staticLayerId) != null;
+      if (!isLand || !walking.canEnterGround(worldView.groundTypeAt(cell))) {
         continue;
       }
-      Cell? beach = strategy.getNearestCellForAgentTypeOnLayer(
+      Cell? beach = worldView.nearestCellOf(
         cell: cell,
         radius: kGameConfiguration.player.startBeachDistance,
         type: BeachModel,
         layerId: PatchModel.staticLayerId,
       );
       if (beach != null) {
-        return Player(model: model, position: cell.center);
+        return Player(worldView: worldView, position: cell.center);
       }
     }
-    return Player(model: model, position: middle.center);
+    return Player(worldView: worldView, position: middle.center);
   }
 
   bool get isMoving => !direction.isZero();
@@ -89,6 +88,6 @@ class Player {
   }
 
   bool _canStandOn(Pos pos) {
-    return movementMode.canEnterCell(model, pos.cell);
+    return movementMode.canEnterGround(worldView.groundTypeAt(pos.cell));
   }
 }

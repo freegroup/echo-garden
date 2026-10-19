@@ -66,8 +66,8 @@ class PlayerSprite extends SpriteAnimationComponent with HasGameReference<GameVi
   }
 
   void schritteVibration() async {
-    bool? canVibrate = await Vibration.hasVibrator();
-    if (canVibrate != null && canVibrate) {
+    bool canVibrate = await Vibration.hasVibrator();
+    if (canVibrate) {
       // Erzeuge eine sanfte Vibration
       // Die Dauer der Vibration ist in Millisekunden.
       // Für sanfte Schritte könntest du kurze Vibrationen mit Pausen dazwischen verwenden.

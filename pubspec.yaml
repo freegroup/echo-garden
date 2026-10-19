@@ -18,16 +18,15 @@ dependencies:
 
   cupertino_icons: ^1.0.2
   uuid: ^4.3.3
-  fast_noise: ^2.0.0
-  spritewidget: ^2.0.1
   flame: ^1.14.0
-  flame_tiled: ^1.18.3
-  flutter_soloud: ^1.2.4
   flame_audio: ^2.1.8
-  vibration: ^1.8.4
+  vibration: ^3.2.1
   json_annotation: ^4.8.1
   path_provider: ^2.1.2
-  audioplayers: ^5.2.1
+  flutter_tts: ^4.2.5
+  flutter_localizations:
+    sdk: flutter
+  flutter_soloud: ^3.5.4
 
 dev_dependencies:
   flutter_test:

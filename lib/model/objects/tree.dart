@@ -27,12 +27,9 @@ class TreeModel extends PlantModel {
 
   @override
   void step() {
-    bool changed = false;
-    changed |= _grow();
-    changed |= _seed();
+    _grow();
+    _seed();
     _cleanAir();
-
-    if (changed) gameModelRef.notifyChanged(this);
 
     if (energy <= 0) {
       gameModelRef.remove(this);

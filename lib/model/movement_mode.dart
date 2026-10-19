@@ -13,7 +13,11 @@ class MovementMode {
   const MovementMode({required this.name, required this.canEnter});
 
   bool canEnterCell(GameModel model, Cell cell) {
-    Type? ground = model.groundTypeAt(cell);
+    return canEnterGround(model.groundTypeAt(cell));
+  }
+
+  /// Whether this mode gets along with a type of ground.
+  bool canEnterGround(Type? ground) {
     // outside of the map there is no ground
     if (ground == null) {
       return false;

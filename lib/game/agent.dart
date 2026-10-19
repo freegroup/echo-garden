@@ -1,13 +1,13 @@
-/* it is the visual reprensentation Twin of an AgentModel 
+/* it is the visual reprensentation Twin of an object of the world view
 */
 import 'package:echo_garden/game/game.dart';
-import 'package:echo_garden/model/agent.dart';
+import 'package:echo_garden/representation/world_view.dart';
 import 'package:flame/components.dart';
 
 class AgentVisualization extends PositionComponent with HasGameReference<GameVisualization> {
-  final AgentModel agentModel;
+  final AgentView agent;
   AgentVisualization({
-    required this.agentModel,
+    required this.agent,
     super.position,
     super.size,
     super.scale,

@@ -7,12 +7,13 @@ import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/objects/beach.dart';
 import 'package:echo_garden/model/objects/flat_water.dart';
 import 'package:echo_garden/model/objects/parched_grass.dart';
+import 'package:echo_garden/representation/world_view.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/painting.dart';
 
 /// True for agents that the GroundRenderer draws as a soft ground layer
 /// (grass), so the per-agent renderer skips them.
-bool isGroundCover(AgentModel agent) => agent is GrassModel || agent is ParchedGrassModel;
+bool isGroundCover(AgentView agent) => agent.type == GrassModel || agent.type == ParchedGrassModel;
 
 /// Draws the ground with smooth transitions (dual-grid autotiling).
 ///
@@ -26,9 +27,9 @@ bool isGroundCover(AgentModel agent) => agent is GrassModel || agent is ParchedG
 /// Layers are the terrains (water → beach → soil → mountains) plus the ground
 /// cover (grass), which may lie on any terrain. This only reads the model.
 class GroundRenderer extends PositionComponent with HasGameReference<GameVisualization> {
-  final GameModel gameModel;
+  final WorldView worldView;
 
-  GroundRenderer({required this.gameModel});
+  GroundRenderer({required this.worldView});
 
   static const int _tile = 64; // pixels per tile; must match world.tileSize
 
@@ -62,9 +63,9 @@ class GroundRenderer extends PositionComponent with HasGameReference<GameVisuali
     ];
 
     int rankAt(int x, int y) {
-      x = x.clamp(0, gameModel.width - 1);
-      y = y.clamp(0, gameModel.height - 1);
-      return rankOf[gameModel.groundTypeAt(Cell(x, y))] ?? 0;
+      x = x.clamp(0, worldView.width - 1);
+      y = y.clamp(0, worldView.height - 1);
+      return rankOf[worldView.groundTypeAt(Cell(x, y))] ?? 0;
     }
 
     _layers = [];
@@ -77,8 +78,8 @@ class GroundRenderer extends PositionComponent with HasGameReference<GameVisuali
     }
 
     // ground cover on top of the terrain: grass, and dry (parched) grass
-    bool hasGrass(int x, int y) => _plantAt(x, y) is GrassModel;
-    bool hasParched(int x, int y) => _plantAt(x, y) is ParchedGrassModel;
+    bool hasGrass(int x, int y) => _plantAt(x, y)?.type == GrassModel;
+    bool hasParched(int x, int y) => _plantAt(x, y)?.type == ParchedGrassModel;
 
     List<ui.Image> grass = await _loadImages(['grass-05', 'grass-06', 'grass-07']);
     _layers.add(await _buildLayer(masks, grass, hasParched, tint: const Color(0xFFAEA24B)));
@@ -97,9 +98,9 @@ class GroundRenderer extends PositionComponent with HasGameReference<GameVisuali
   }
 
 
-  AgentModel? _plantAt(int x, int y) {
-    if (x < 0 || y < 0 || x >= gameModel.width || y >= gameModel.height) return null;
-    return gameModel.getAgentAtCell(Cell(x, y), PlantModel.staticLayerId);
+  AgentView? _plantAt(int x, int y) {
+    if (x < 0 || y < 0 || x >= worldView.width || y >= worldView.height) return null;
+    return worldView.agentAt(Cell(x, y), PlantModel.staticLayerId);
   }
 
   @override

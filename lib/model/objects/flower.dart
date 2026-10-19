@@ -8,10 +8,7 @@ class FlowerModel extends PlantModel {
 
   @override
   void step() {
-    var changed = false;
-    changed |= _grow();
-
-    if (changed) gameModelRef.notifyChanged(this);
+    _grow();
 
     if (energy <= 0) {
       gameModelRef.remove(this);

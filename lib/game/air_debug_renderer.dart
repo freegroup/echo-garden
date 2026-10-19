@@ -1,6 +1,7 @@
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/game.dart';
 import 'package:echo_garden/model/index.dart';
+import 'package:echo_garden/representation/world_view.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/painting.dart';
 
@@ -8,14 +9,14 @@ import 'package:flutter/painting.dart';
 /// the wind. The stronger the wind, the less transparent the arrow; calm air
 /// shows nothing.
 ///
-/// This only reads the model.
+/// This only reads the world view.
 class AirDebugRenderer extends PositionComponent with HasGameReference<GameVisualization> {
-  final GameModel gameModel;
+  final WorldView worldView;
 
   // shown or not; switched with the D key (see GraphicsRepresentation)
   bool isShown = kGameConfiguration.debug.showWind;
 
-  AirDebugRenderer({required this.gameModel});
+  AirDebugRenderer({required this.worldView});
 
   static const double _tile = 64; // pixels per tile; must match world.tileSize
 
@@ -40,17 +41,17 @@ class AirDebugRenderer extends PositionComponent with HasGameReference<GameVisua
 
     for (int y = y0; y <= y1; y++) {
       for (int x = x0; x <= x1; x++) {
-        AgentModel? air = gameModel.getAgentAtCell(Cell(x, y), AirModel.staticLayerId);
-        if (air is AirModel) {
-          _drawArrow(canvas, x, y, air);
+        var wind = worldView.windAt(Cell(x, y));
+        if (wind != null) {
+          _drawArrow(canvas, x, y, wind.direction, wind.strength);
         }
       }
     }
   }
 
-  void _drawArrow(Canvas canvas, int x, int y, AirModel air) {
+  void _drawArrow(Canvas canvas, int x, int y, Direction direction, double strength) {
     double fullStrength = kGameConfiguration.debug.windArrowFullStrength;
-    double opacity = (air.windStrength / fullStrength).clamp(0.0, 1.0);
+    double opacity = (strength / fullStrength).clamp(0.0, 1.0);
     if (opacity <= 0) {
       return;
     }
@@ -58,7 +59,7 @@ class AirDebugRenderer extends PositionComponent with HasGameReference<GameVisua
 
     // the arrow runs through the middle of the cell, in the wind direction
     Offset center = Offset((x + 0.5) * _tile, (y + 0.5) * _tile);
-    Offset along = Offset(air.windDirection.unitX, air.windDirection.unitY);
+    Offset along = Offset(direction.unitX, direction.unitY);
     Offset across = Offset(-along.dy, along.dx);
 
     Offset tail = center - along * _halfLength;

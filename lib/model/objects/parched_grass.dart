@@ -9,9 +9,7 @@ class ParchedGrassModel extends PlantModel {
 
   @override
   void step() {
-    bool changed = false;
-    changed |= _grow();
-    if (changed) gameModelRef.notifyChanged(this);
+    _grow();
   }
 
   bool _grow() {

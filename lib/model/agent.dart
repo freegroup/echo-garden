@@ -30,7 +30,12 @@ class AgentModel {
   double get energy => _energy;
 
   set energy(double value) {
-    _energy = max(minEnergy, value);
+    double newEnergy = max(minEnergy, value);
+    if (newEnergy == _energy) return;
+    _energy = newEnergy;
+    // Every change of the state is reported, so no reader can miss one: the
+    // readers know the world only from these reports (see ModelPublisher).
+    gameModelRef.notifyChanged(this);
   }
 
   void step() {

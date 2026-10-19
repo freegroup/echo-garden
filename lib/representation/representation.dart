@@ -1,55 +1,56 @@
-import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/player.dart';
+import 'package:echo_garden/representation/world_view.dart';
 
 /// Base class for everything that makes the model perceivable:
 /// graphics, sound, later e.g. vibration or a watch.
 ///
-/// A representation only reads the model. It is either awake (registered for
-/// model events and updated every frame) or asleep (the model keeps running
-/// without it, e.g. while catching up after the app was closed).
-abstract class Representation implements ModelListener {
-  final GameModel model;
+/// A representation knows the world only from the world view, which is built
+/// from the messages of the model. It is either awake (registered for the
+/// changes and updated every frame) or asleep (the model keeps running without
+/// it, e.g. while catching up after the app was closed).
+abstract class Representation implements WorldViewListener {
+  final WorldView worldView;
 
   // the observer: where the camera looks and where the listener stands
   final Player player;
 
   bool _isAwake = false;
 
-  Representation(this.model, this.player);
+  Representation(this.worldView, this.player);
 
   bool get isAwake => _isAwake;
 
   void wake() {
     if (_isAwake) return;
     syncAll();
-    model.addListener(this);
+    worldView.addListener(this);
     _isAwake = true;
   }
 
   void sleep() {
     if (!_isAwake) return;
-    model.removeListener(this);
+    worldView.removeListener(this);
     _isAwake = false;
   }
 
-  /// Brings the representation in line with the current state of the model.
+  /// Brings the representation in line with the current state of the world.
   void syncAll();
 
   /// Called every frame while awake.
   void update(double dt) {}
 
-  // Model events: by default nothing happens. Each representation overrides
-  // the events it needs.
+  // Changes of the world: by default nothing happens. Each representation
+  // overrides the ones it needs.
 
   @override
-  void onAgentAdded(AgentModel agent) {}
+  void onAgentAdded(AgentView agent) {}
 
   @override
-  void onAgentRemoved(AgentModel agent) {}
+  void onAgentRemoved(AgentView agent) {}
 
   @override
-  void onAgentMoved(AgentModel agent) {}
+  void onAgentMoved(AgentView agent) {}
 
   @override
-  void onAgentChanged(AgentModel agent) {}
+  void onAgentChanged(AgentView agent) {}
 }

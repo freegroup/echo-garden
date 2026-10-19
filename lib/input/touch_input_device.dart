@@ -1,35 +1,45 @@
+import 'dart:ui';
+
+import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/input/input_device.dart';
 import 'package:flame/components.dart';
-import 'package:flame/palette.dart';
-import 'package:flutter/material.dart';
 
-/// Moves the player with an on-screen joystick.
+/// Moves the player by touch, like an IBM TrackPoint: the finger offset from
+/// where it first touched is the walk vector — direction and speed. Hold a
+/// direction and the player keeps walking; pull further to go faster; release
+/// to stop. There is no visible knob, and the touch may start anywhere.
 ///
-/// The joystick itself has to be shown on the screen, so the graphics
-/// representation adds [joystick] to its viewport.
+/// The game screen feeds the positions in: from a GestureDetector (finger or
+/// mouse drag), and on Android with TalkBack on from its touch exploration.
 class TouchInputDevice extends InputDevice {
-  late final JoystickComponent joystick;
-  bool _wasTouched = false;
+  Offset? _origin; // where the finger first touched
 
-  TouchInputDevice(super.player) {
-    final knobPaint = BasicPalette.darkGreen.withAlpha(100).paint();
-    final backgroundPaint = BasicPalette.green.withAlpha(30).paint();
-    joystick = JoystickComponent(
-      knob: CircleComponent(radius: 30, paint: knobPaint),
-      background: CircleComponent(radius: 100, paint: backgroundPaint),
-      margin: const EdgeInsets.only(right: 40, bottom: 40),
-    );
+  TouchInputDevice(super.player);
+
+  void dragStart(Offset position) {
+    _origin = position;
   }
 
-  @override
-  void update() {
-    bool isTouched = !joystick.relativeDelta.isZero();
+  void dragUpdate(Offset position) {
+    final origin = _origin;
+    if (origin == null) return;
 
-    // Only write the direction while the joystick is used or right after it
-    // was released. Otherwise it would overwrite the keyboard every frame.
-    if (isTouched || _wasTouched) {
-      player.direction = joystick.relativeDelta.clone();
+    final offset = position - origin;
+    final distance = offset.distance;
+    final deadZone = kGameConfiguration.player.touchDeadZone;
+    if (distance < deadZone) {
+      player.direction = Vector2.zero();
+      return;
     }
-    _wasTouched = isTouched;
+
+    // speed grows from the dead zone up to touchFullSpeed, as a factor 0..1
+    final fullSpeed = kGameConfiguration.player.touchFullSpeed;
+    final magnitude = ((distance - deadZone) / (fullSpeed - deadZone)).clamp(0.0, 1.0);
+    player.direction = Vector2(offset.dx, offset.dy) / distance * magnitude;
+  }
+
+  void dragEnd() {
+    _origin = null;
+    player.direction = Vector2.zero();
   }
 }

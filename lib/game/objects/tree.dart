@@ -1,17 +1,22 @@
+import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/game/objects/growing_tile.dart';
-import 'package:echo_garden/model/index.dart';
 
 class TreeTile extends GrowingTileSquare {
+  // how this kind of tree grows (from the configuration); its energy decides
+  // which of the images is shown
+  final TreeSettings settings;
+
   TreeTile({
-    required super.agentModel,
+    required super.agent,
     required super.position,
+    TreeSettings? settings,
     super.spriteFilenames = const [
       "tree-01.png",
       "tree-02.png",
       "tree-03.png",
       "tree-04.png",
     ],
-  });
+  }) : settings = settings ?? kGameConfiguration.plant.tree;
 
   @override
   Future<void> onLoad() async {
@@ -21,18 +26,16 @@ class TreeTile extends GrowingTileSquare {
 
   @override
   Future<void> onModelChange() async {
-    var model = agentModel as TreeModel;
-
-    var minEnergy = model.settings.initialEnergy;
-    var maxEnergy = model.settings.maxEnergy;
-    var currentEnergy = model.energy;
+    var minEnergy = settings.initialEnergy;
+    var maxEnergy = settings.maxEnergy;
+    var currentEnergy = agent.energy;
     setTileToShow(currentEnergy, minEnergy, maxEnergy);
   }
 }
 
 class FirTile extends TreeTile {
-  FirTile({required super.agentModel, required super.position})
-      : super(spriteFilenames: [
+  FirTile({required super.agent, required super.position})
+      : super(settings: kGameConfiguration.plant.fir, spriteFilenames: [
           "fir-01.png",
           "fir-02.png",
           "fir-03.png",
@@ -41,8 +44,8 @@ class FirTile extends TreeTile {
 }
 
 class PineTile extends TreeTile {
-  PineTile({required super.agentModel, required super.position})
-      : super(spriteFilenames: [
+  PineTile({required super.agent, required super.position})
+      : super(settings: kGameConfiguration.plant.pine, spriteFilenames: [
           "pine-01.png",
           "pine-02.png",
           "pine-03.png",

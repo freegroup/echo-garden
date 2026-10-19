@@ -15,7 +15,7 @@ class TileSquare extends AgentVisualization {
   final Paint _paint = Paint()..isAntiAlias = false;
 
   TileSquare({
-    required super.agentModel,
+    required super.agent,
     required this.spriteFilenames, // Now expects a list of filenames
     super.anchor = Anchor.topLeft,
     required super.position,

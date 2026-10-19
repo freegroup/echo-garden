@@ -17,7 +17,7 @@ class GrowingTileSquare extends AgentVisualization {
   final bool canFlipVertical;
   final bool canFlipHorizontal;
   GrowingTileSquare({
-    required super.agentModel,
+    required super.agent,
     required this.spriteFilenames, // Now expects a list of filenames
     super.anchor = Anchor.topLeft,
     required super.position,

@@ -1,7 +1,7 @@
 import 'package:echo_garden/model/game.dart';
 import 'package:flutter/material.dart';
 import 'package:echo_garden/game_session.dart';
-import 'package:flame/game.dart';
+import 'package:echo_garden/screens/game_screen.dart';
 
 import '../utils/io.dart';
 // Make sure to import your GameModel and loadGameModel function
@@ -26,19 +26,18 @@ class _StartScreenState extends State<StartScreen> {
         // If loading succeeds, navigate to the game screen with the loaded game state
         widget.session.start();
         Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (context) => GameWidget(
-              game: widget.session.graphics.game), // Adjust if you need to pass the loaded game model
+          builder: (context) => GameScreen(session: widget.session),
         ));
       } else {
         // If no saved game is found, show an error message
         setState(() {
-          errorMessage = "No saved game found.";
+          errorMessage = "Kein gespeichertes Spiel gefunden.";
         });
       }
     } catch (e) {
       // Handle any errors during loading
       setState(() {
-        errorMessage = "Failed to load the game: $e";
+        errorMessage = "Das Spiel konnte nicht geladen werden: $e";
       });
     }
   }
@@ -62,15 +61,15 @@ class _StartScreenState extends State<StartScreen> {
                 // Directly navigate to the game, starting a new game
                 widget.session.start();
                 Navigator.of(context).pushReplacement(MaterialPageRoute(
-                  builder: (context) => GameWidget(game: widget.session.graphics.game),
+                  builder: (context) => GameScreen(session: widget.session),
                 ));
               },
-              child: Text('New Game'),
+              child: Text('Neues Spiel'),
             ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => _loadGame(context),
-              child: Text('Load Game'),
+              child: Text('Spiel laden'),
             ),
           ],
         ),
