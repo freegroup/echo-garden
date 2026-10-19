@@ -1,7 +1,7 @@
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/objects/beach.dart';
-import 'package:echo_garden/model/terraformer/terraformer.dart';
+import 'package:echo_garden/model/terraformer/plugins/terraform_air.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 AirModel airAt(GameModel model, Cell cell) =>
@@ -263,7 +263,7 @@ void main() {
       }
     }
 
-    Direction? landward = Terraformer.directionTowards(
+    Direction? landward = TerraformAir.directionTowards(
         model, const Cell(5, 5), (ground) => ground == SoilModel);
 
     expect(landward, Direction.east);
@@ -277,7 +277,7 @@ void main() {
       }
     }
 
-    Direction? landward = Terraformer.directionTowards(
+    Direction? landward = TerraformAir.directionTowards(
         model, const Cell(5, 5), (ground) => ground == SoilModel);
 
     expect(landward, isNull);

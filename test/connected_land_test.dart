@@ -12,6 +12,25 @@ bool isWalkableLand(GameModel model, Cell cell) {
   return onLand && walking.canEnterCell(model, cell);
 }
 
+// Whether the cell lies in a block of 2 x 2 cells of walkable land: then the
+// way through it is at least two cells wide.
+bool inWalkableSquare(GameModel model, Cell cell) {
+  for (int dx = -1; dx <= 0; dx++) {
+    for (int dy = -1; dy <= 0; dy++) {
+      bool square = true;
+      for (int x = 0; x <= 1; x++) {
+        for (int y = 0; y <= 1; y++) {
+          if (!isWalkableLand(model, Cell(cell.x + dx + x, cell.y + dy + y))) {
+            square = false;
+          }
+        }
+      }
+      if (square) return true;
+    }
+  }
+  return false;
+}
+
 // How many walkable cells can be reached on foot from the start cell.
 int reachableFrom(GameModel model, Cell start) {
   Set<Cell> seen = {start};
@@ -51,6 +70,27 @@ void main() {
       expect(walkable, isNotEmpty, reason: 'seed $seed has no walkable land');
       expect(reachableFrom(model, walkable.first), walkable.length,
           reason: 'seed $seed: not all walkable land is connected');
+    }
+  });
+
+  test('no way is only one cell wide, on many maps', () {
+    for (int seed = 0; seed < 10; seed++) {
+      final model = GameModel(
+          width: kGameConfiguration.grid.mapWidth,
+          height: kGameConfiguration.grid.mapHeight,
+          seed: seed);
+
+      List<Cell> narrow = [];
+      for (int x = 0; x < model.width; x++) {
+        for (int y = 0; y < model.height; y++) {
+          Cell cell = Cell(x, y);
+          if (isWalkableLand(model, cell) && !inWalkableSquare(model, cell)) {
+            narrow.add(cell);
+          }
+        }
+      }
+      expect(narrow, isEmpty,
+          reason: 'seed $seed: ${narrow.length} cells only one cell wide, e.g. ${narrow.take(3)}');
     }
   });
 
