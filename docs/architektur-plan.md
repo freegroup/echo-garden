@@ -7,7 +7,7 @@ Stand: 2026-10-15
 Das **Model** rechnet den IST-Zustand der Welt: Boden, Pflanzen, Tiere, später Häuser und Fabriken.
 Die **Darstellungen** (Grafik, Sound, später evtl. weitere) lesen diesen Zustand nur und machen daraus etwas Sicht- oder Hörbares.
 
-- Das Model ist reines Dart: keine Imports aus `flame`, `flutter` oder `lib/game/`.
+- Das Model ist reines Dart: keine Imports aus `flame`, `flutter` oder `lib/representation/`.
 - Das Model kennt keine Darstellung und wartet nie auf eine.
 - Eine Darstellung ändert das Model nie direkt. Eingaben (Joystick, Tastatur) gehen über die Model-API.
 
@@ -27,7 +27,7 @@ Die **Darstellungen** (Grafik, Sound, später evtl. weitere) lesen diesen Zustan
   - `Cell(x, y)`: eine Kachel (Spalte, Zeile). Damit arbeiten Layer, Hasen, Pflanzen, `MovementStrategy`.
   - `Pos(x, y)`: eine Position in Einheiten. Damit arbeiten Spieler und Sound.
   - `pos.cell` liefert die Kachel, `cell.center` die Kachelmitte als `Pos`.
-- Nur die Grafik kennt Pixel: [pixels.dart](../lib/game/pixels.dart) mit `cellToPixel` und `posToPixel`.
+- Nur die Grafik kennt Pixel: [pixels.dart](../lib/representation/graphics/pixels.dart) mit `cellToPixel` und `posToPixel`.
 - Konfiguration (Model):
   ```dart
   grid: (
@@ -130,7 +130,7 @@ Alle Intervalle stehen in der Konfiguration.
 - Der Controller sammelt die Zeit und löst jeden Takt aus, sobald er fällig ist, notfalls mehrmals.
 - Sind mehrere Takte gleichzeitig fällig, gilt eine **feste Reihenfolge** (langsam vor schnell).
 - Wechselwirkungen zwischen Takten prüft der schnellere Beteiligte.
-- Die Uhr wandert aus `WorldVisualization.update` ([world.dart](../lib/game/world.dart)) ins Model.
+- Die Uhr wandert aus `WorldVisualization.update` ([world.dart](../lib/representation/graphics/world.dart)) ins Model.
 
 ## 3. Dauerhafte und flüchtige Objekte
 
@@ -169,7 +169,7 @@ Touch       ── Ereignis ──▶         GameModel            ──▶  So
 (Watch-Geste)                (rechnet den IST-Zustand)   ──▶  (Vibration, Watch, Sprache)
 ```
 
-### Spieler als Beobachter ([player.dart](../lib/player.dart))
+### Spieler als Beobachter ([player.dart](../lib/session/player.dart))
 - Der Spieler steht **außerhalb des Models**. Er bestimmt, wo die Kamera hinschaut und wo der Hörer steht, verändert die Welt aber (noch) nicht.
 - Die `GameSession` besitzt ihn; Eingabegeräte setzen seine Richtung, Darstellungen lesen seine Position.
 - Er bewegt sich stufenlos pro Frame mit `dt`. Das ist erlaubt, weil er nicht zum Model gehört; im Model gilt weiter: feste Schritte, kein `dt`.
@@ -183,7 +183,7 @@ Touch       ── Ereignis ──▶         GameModel            ──▶  So
 - Model-Ereignisse sind standardmäßig leer; jede Darstellung überschreibt nur, was sie braucht.
 - Abgeleitet: `GraphicsRepresentation`, `SoundRepresentation`. Später möglich: Vibration, Apple Watch (eigene watchOS-App, Verbindung nicht echtzeitfähig, also nur für grobe Signale), Sprachausgabe.
 
-### Grafik (`lib/game/`, Flame)
+### Grafik (`lib/representation/graphics/`, Flame)
 - `GraphicsRepresentation` besitzt das Flame-Spiel und sagt der `WorldVisualization`, was sie zeigen soll. Die Flame-Welt ist reines Zeichnen.
 - Die Zuordnung Model-Typ → Grafik-Komponente liegt in einer Factory in der Grafik. `createVisualization()` und das Feld `visualization` verschwinden aus dem Model.
 - Die Grafik verwaltet selbst eine Zuordnung Model-Objekt → Komponente.
@@ -197,7 +197,7 @@ Touch       ── Ereignis ──▶         GameModel            ──▶  So
   2. **Audio-Backend** spielt diese Liste ab.
 - Hörradius **pro Geräuschquelle** in Einheiten (z.B. Hase klein, Meer groß) statt pauschal 7 Kacheln.
 - Lautstärke- und Panorama-Änderungen mit kurzen Rampen (wenige ms) gegen Klicks. Das ist keine Bewegungsglättung.
-- Wird aus `JoystickPlayer` ([player.dart](../lib/game/actors/player.dart)) herausgelöst; rechnet nicht mehr in Pixeln.
+- Wird aus `JoystickPlayer` ([player.dart](../lib/representation/graphics/player_sprite.dart)) herausgelöst; rechnet nicht mehr in Pixeln.
 - Kopfhörer sind Voraussetzung für Links/Rechts-Ortung.
 
 ### Eingänge (`lib/input/`)
@@ -210,7 +210,7 @@ Touch       ── Ereignis ──▶         GameModel            ──▶  So
 - Das Sprite der Spielfigur ist nur noch Darstellung und folgt dem `Player`.
 - **Nicht** als Eingang: Wetter, Temperatur und ähnliche Umweltwerte. Die kommen später als **Services**, die das Model aktiv fragt.
 
-### Session ([game_session.dart](../lib/game_session.dart))
+### Session ([game_session.dart](../lib/session/game_session.dart))
 - Verbindet Model, Eingänge und Darstellungen und treibt sie mit einer eigenen Frame-Schleife (`Ticker`), unabhängig von Flame.
 - Pro Frame: Eingänge abfragen, Spieler bewegen, Model-Takt, wache Darstellungen aktualisieren.
 - Führt vorübergehend den 1,3-s-Takt, bis Schritt 4 die Takte ins Model bringt.
@@ -222,7 +222,7 @@ Nach jedem Schritt muss die App laufen.
 Stand: ✅ erledigt, 🔶 teilweise, ⏭️ übersprungen
 
 1. ⏭️ **Messen:** Rechenzeit eines Simulationsschritts bei voller Welt, getrennt nach Hasen und Pflanzen. Ergebnis bestimmt die Takt-Intervalle und zeigt, ob `maxCatchUp` über 20 Minuten hinaus erhöht werden kann.
-2. ✅ **Entkoppeln:** Zuhörer-Schnittstelle im Model statt `gameVisualization`; `createVisualization()`/`visualization` in eine Grafik-Factory verschieben; `async`/`await` aus der Simulation entfernen; das `assert` auf die Grafik in [rabbit.dart](../lib/model/actors/rabbit.dart) entfernen. Danach importiert `lib/model/` nichts mehr aus `lib/game/`.
+2. ✅ **Entkoppeln:** Zuhörer-Schnittstelle im Model statt `gameVisualization`; `createVisualization()`/`visualization` in eine Grafik-Factory verschieben; `async`/`await` aus der Simulation entfernen; das `assert` auf die Grafik in [rabbit.dart](../lib/model/actors/rabbit.dart) entfernen. Danach importiert `lib/model/` nichts mehr aus der Grafik (heute `lib/representation/graphics/`).
 3. ✅ **Koordinaten:** `Pos(int, int)` einführen, `gridWidth`/`mapWidth`/`mapHeight` in die Konfiguration, Raster-Objekte mit Einrasten, `Layer` auf ganzzahlige Kachel-Schlüssel, Grafik rechnet in Pixel um. `Vector2`/Flame aus Model und `MovementStrategy` entfernen.
 4. 🔶 **Takte:** Takt-Klasse, Anmeldung pro Objekt, Hauptuhr mit Simulationszeit im Model; den Übergangs-Takt aus `GameSession` ins Model holen; Scheduler werden Optionen pro Takt; Pflanzenwachstum (`_grow`) in den Ökologie-Takt.
    - ✅ Erster Teil umgesetzt ([clock.dart](../lib/model/clock.dart)): Jedes Objekt sagt mit `clock` selbst, auf welchem Takt es läuft (`ecology` als Standard, Hasen `animal`, Luft `air`). Jeder Takt hat ein Intervall in Simulationszeit (ganze ms) und einen Anteil, der pro Schritt zufällig rechnet (`clocks` in der Konfiguration). Das Model führt die Simulationszeit (`now`) und `advance(ms)`; die Takte laufen in fester Reihenfolge Ökologie → Tiere → Luft. Die Session gibt nur noch die Frame-Zeit weiter. Neues Pflanzenwachstum hängt am Ökologie-Takt. Luft läuft jetzt alle 200 ms statt 1300 ms.

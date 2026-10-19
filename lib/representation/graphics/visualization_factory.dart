@@ -1,10 +1,10 @@
-import 'package:echo_garden/game/agent.dart';
-import 'package:echo_garden/game/objects/flower.dart';
-import 'package:echo_garden/game/objects/rabbit.dart';
-import 'package:echo_garden/game/objects/square.dart';
-import 'package:echo_garden/game/objects/tree.dart';
-import 'package:echo_garden/game/objects/weed.dart';
-import 'package:echo_garden/game/pixels.dart';
+import 'package:echo_garden/representation/graphics/agent.dart';
+import 'package:echo_garden/representation/graphics/tiles/flower.dart';
+import 'package:echo_garden/representation/graphics/tiles/rabbit.dart';
+import 'package:echo_garden/representation/graphics/tiles/square.dart';
+import 'package:echo_garden/representation/graphics/tiles/tree.dart';
+import 'package:echo_garden/representation/graphics/tiles/weed.dart';
+import 'package:echo_garden/representation/graphics/pixels.dart';
 import 'package:echo_garden/model/actors/rabbit.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/representation/world_view.dart';

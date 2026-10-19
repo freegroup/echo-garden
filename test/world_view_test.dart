@@ -3,7 +3,7 @@ import 'package:echo_garden/model/messages.dart';
 import 'package:echo_garden/model/objects/beach.dart';
 import 'package:echo_garden/model/publisher.dart';
 import 'package:echo_garden/representation/world_view.dart';
-import 'package:echo_garden/strategy/base.dart';
+import 'package:echo_garden/model/movement_strategy.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Every object, the ground and the wind of every cell must be the same in the

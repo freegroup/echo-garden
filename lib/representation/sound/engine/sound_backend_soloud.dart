@@ -1,5 +1,5 @@
-import 'package:echo_garden/sound/sound_backend.dart';
-import 'package:echo_garden/sound/sound_spatializer.dart';
+import 'package:echo_garden/representation/sound/engine/sound_backend.dart';
+import 'package:echo_garden/representation/sound/engine/sound_spatializer.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
 /// Plays the sound space with SoLoud: per voice the volume, the pan, the play

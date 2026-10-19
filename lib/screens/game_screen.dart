@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:echo_garden/game_session.dart';
+import 'package:echo_garden/session/game_session.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';

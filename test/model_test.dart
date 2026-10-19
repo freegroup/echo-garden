@@ -2,7 +2,7 @@ import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/model/actors/rabbit.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/movement_mode.dart';
-import 'package:echo_garden/strategy/base.dart';
+import 'package:echo_garden/model/movement_strategy.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 GameModel newModel() =>

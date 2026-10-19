@@ -1,4 +1,4 @@
-import 'package:echo_garden/sound/sound_spatializer.dart';
+import 'package:echo_garden/representation/sound/engine/sound_spatializer.dart';
 
 /// What the SoundManager needs from an audio engine.
 ///

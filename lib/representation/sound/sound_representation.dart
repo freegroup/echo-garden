@@ -2,11 +2,11 @@ import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/objects/beach.dart';
 import 'package:echo_garden/representation/representation.dart';
-import 'package:echo_garden/representation/sound_env.dart';
-import 'package:echo_garden/sound/sound_backend_soloud.dart';
-import 'package:echo_garden/sound/sound_listener.dart';
-import 'package:echo_garden/sound/sound_manager.dart';
-import 'package:echo_garden/sound/sound_source.dart';
+import 'package:echo_garden/representation/sound/sound_env.dart';
+import 'package:echo_garden/representation/sound/engine/sound_backend_soloud.dart';
+import 'package:echo_garden/representation/sound/engine/sound_listener.dart';
+import 'package:echo_garden/representation/sound/engine/sound_manager.dart';
+import 'package:echo_garden/representation/sound/engine/sound_source.dart';
 import 'package:flame/components.dart';
 
 /// Makes the model audible around the player.

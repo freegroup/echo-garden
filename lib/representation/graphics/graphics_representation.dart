@@ -1,5 +1,5 @@
-import 'package:echo_garden/game/game.dart';
-import 'package:echo_garden/game/world.dart';
+import 'package:echo_garden/representation/graphics/game.dart';
+import 'package:echo_garden/representation/graphics/world.dart';
 import 'package:echo_garden/representation/representation.dart';
 import 'package:echo_garden/representation/world_view.dart';
 import 'package:flutter/services.dart';

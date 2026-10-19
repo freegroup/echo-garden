@@ -1,4 +1,4 @@
-import 'package:echo_garden/player.dart';
+import 'package:echo_garden/session/player.dart';
 import 'package:echo_garden/representation/world_view.dart';
 
 /// Base class for everything that makes the model perceivable:

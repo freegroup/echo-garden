@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/game/agent.dart';
+import 'package:echo_garden/representation/graphics/agent.dart';
 import 'package:echo_garden/representation/world_view.dart';
 import 'package:flame/components.dart';
 

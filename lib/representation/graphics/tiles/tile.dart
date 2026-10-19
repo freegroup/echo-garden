@@ -2,7 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/game/agent.dart';
+import 'package:echo_garden/representation/graphics/agent.dart';
 import 'package:flame/components.dart';
 
 class TileSquare extends AgentVisualization {

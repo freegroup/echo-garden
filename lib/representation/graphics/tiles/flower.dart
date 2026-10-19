@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/game/objects/tile.dart';
+import 'package:echo_garden/representation/graphics/tiles/tile.dart';
 import 'package:flame/components.dart';
 
 class FlowerTile extends TileSquare {

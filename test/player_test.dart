@@ -3,9 +3,9 @@ import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/movement_mode.dart';
 import 'package:echo_garden/model/objects/beach.dart';
 import 'package:echo_garden/model/publisher.dart';
-import 'package:echo_garden/player.dart';
+import 'package:echo_garden/session/player.dart';
 import 'package:echo_garden/representation/world_view.dart';
-import 'package:echo_garden/strategy/base.dart';
+import 'package:echo_garden/model/movement_strategy.dart';
 import 'package:flame/components.dart';
 import 'package:flutter_test/flutter_test.dart';
 

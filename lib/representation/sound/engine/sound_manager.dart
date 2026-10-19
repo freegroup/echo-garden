@@ -1,7 +1,7 @@
-import 'package:echo_garden/sound/sound_backend.dart';
-import 'package:echo_garden/sound/sound_listener.dart';
-import 'package:echo_garden/sound/sound_source.dart';
-import 'package:echo_garden/sound/sound_spatializer.dart';
+import 'package:echo_garden/representation/sound/engine/sound_backend.dart';
+import 'package:echo_garden/representation/sound/engine/sound_listener.dart';
+import 'package:echo_garden/representation/sound/engine/sound_source.dart';
+import 'package:echo_garden/representation/sound/engine/sound_spatializer.dart';
 
 /// The sound space: one listener and the sound sources around it, as in 3D
 /// audio engines (Web Audio API, OpenAL, SoLoud, FMOD), only in 2D.

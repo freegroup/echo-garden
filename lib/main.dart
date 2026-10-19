@@ -1,5 +1,5 @@
-import 'package:echo_garden/game_session.dart';
-import 'package:echo_garden/representation/sound_env.dart';
+import 'package:echo_garden/session/game_session.dart';
+import 'package:echo_garden/representation/sound/sound_env.dart';
 import 'package:echo_garden/screens/start_screen.dart';
 
 import 'package:flutter/material.dart';

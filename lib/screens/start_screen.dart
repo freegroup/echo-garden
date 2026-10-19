@@ -1,6 +1,6 @@
 import 'package:echo_garden/model/game.dart';
 import 'package:flutter/material.dart';
-import 'package:echo_garden/game_session.dart';
+import 'package:echo_garden/session/game_session.dart';
 import 'package:echo_garden/screens/game_screen.dart';
 
 import '../utils/io.dart';

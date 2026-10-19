@@ -1,4 +1,4 @@
-import 'package:echo_garden/model_isolate.dart';
+import 'package:echo_garden/session/model_isolate.dart';
 import 'package:echo_garden/representation/world_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 

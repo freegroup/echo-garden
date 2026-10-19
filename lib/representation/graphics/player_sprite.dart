@@ -1,8 +1,8 @@
 import 'dart:math';
 
-import 'package:echo_garden/game/game.dart';
-import 'package:echo_garden/game/pixels.dart';
-import 'package:echo_garden/player.dart';
+import 'package:echo_garden/representation/graphics/game.dart';
+import 'package:echo_garden/representation/graphics/pixels.dart';
+import 'package:echo_garden/session/player.dart';
 import 'package:flame/components.dart';
 import 'package:flame/particles.dart';
 import 'package:flame/rendering.dart';

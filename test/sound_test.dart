@@ -1,10 +1,10 @@
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/model/pos.dart';
-import 'package:echo_garden/sound/sound_backend.dart';
-import 'package:echo_garden/sound/sound_listener.dart';
-import 'package:echo_garden/sound/sound_manager.dart';
-import 'package:echo_garden/sound/sound_source.dart';
-import 'package:echo_garden/sound/sound_spatializer.dart';
+import 'package:echo_garden/representation/sound/engine/sound_backend.dart';
+import 'package:echo_garden/representation/sound/engine/sound_listener.dart';
+import 'package:echo_garden/representation/sound/engine/sound_manager.dart';
+import 'package:echo_garden/representation/sound/engine/sound_source.dart';
+import 'package:echo_garden/representation/sound/engine/sound_spatializer.dart';
 import 'package:flame/components.dart';
 import 'package:flutter_test/flutter_test.dart';
 

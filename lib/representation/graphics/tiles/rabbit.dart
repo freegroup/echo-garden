@@ -1,8 +1,8 @@
 import 'dart:ui';
 
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/game/agent.dart';
-import 'package:echo_garden/game/pixels.dart';
+import 'package:echo_garden/representation/graphics/agent.dart';
+import 'package:echo_garden/representation/graphics/pixels.dart';
 import 'package:echo_garden/model/cell.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';

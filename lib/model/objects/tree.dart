@@ -6,7 +6,7 @@ import 'package:echo_garden/model/objects/air.dart';
 import 'package:echo_garden/model/cell.dart';
 import 'package:echo_garden/model/objects/plant.dart';
 import 'package:echo_garden/model/objects/seedable.dart';
-import 'package:echo_garden/strategy/base.dart';
+import 'package:echo_garden/model/movement_strategy.dart';
 import 'package:echo_garden/utils/random.dart';
 
 class TreeModel extends PlantModel {

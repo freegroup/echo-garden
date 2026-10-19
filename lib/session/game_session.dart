@@ -4,11 +4,11 @@ import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/input/input_device.dart';
 import 'package:echo_garden/input/keyboard_input_device.dart';
 import 'package:echo_garden/input/touch_input_device.dart';
-import 'package:echo_garden/model_isolate.dart';
-import 'package:echo_garden/player.dart';
-import 'package:echo_garden/representation/graphics_representation.dart';
+import 'package:echo_garden/session/model_isolate.dart';
+import 'package:echo_garden/session/player.dart';
+import 'package:echo_garden/representation/graphics/graphics_representation.dart';
 import 'package:echo_garden/representation/representation.dart';
-import 'package:echo_garden/representation/sound_representation.dart';
+import 'package:echo_garden/representation/sound/sound_representation.dart';
 import 'package:echo_garden/representation/world_view.dart';
 import 'package:flutter/scheduler.dart';
 

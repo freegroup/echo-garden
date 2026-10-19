@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/sound/sound_listener.dart';
-import 'package:echo_garden/sound/sound_source.dart';
+import 'package:echo_garden/representation/sound/engine/sound_listener.dart';
+import 'package:echo_garden/representation/sound/engine/sound_source.dart';
 
 /// How one source sounds for the listener right now.
 class SoundMix {

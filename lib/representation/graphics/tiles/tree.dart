@@ -1,5 +1,5 @@
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/game/objects/growing_tile.dart';
+import 'package:echo_garden/representation/graphics/tiles/growing_tile.dart';
 
 class TreeTile extends GrowingTileSquare {
   // how this kind of tree grows (from the configuration); its energy decides

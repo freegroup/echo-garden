@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:echo_garden/game/game.dart';
+import 'package:echo_garden/representation/graphics/game.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/model/objects/beach.dart';
 import 'package:echo_garden/model/objects/flat_water.dart';

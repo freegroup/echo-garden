@@ -1,6 +1,6 @@
-import 'package:echo_garden/game/actors/player.dart';
-import 'package:echo_garden/game/world.dart';
-import 'package:echo_garden/player.dart';
+import 'package:echo_garden/representation/graphics/player_sprite.dart';
+import 'package:echo_garden/representation/graphics/world.dart';
+import 'package:echo_garden/session/player.dart';
 import 'package:echo_garden/representation/world_view.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
