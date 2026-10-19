@@ -1,22 +1,25 @@
-import 'package:echo_garden/model/pos.dart';
 import 'package:flame/components.dart';
 
 /// How a sound gets quieter with the distance. The formulas are the ones of the
 /// Web Audio API (see distanceGain).
 enum DistanceModel { linear, inverse, exponential }
 
-/// A sound in the world: a looping sound at a position.
+/// A looping sound, placed relative to the listener.
 ///
-/// The owner moves it and sets its volume; the SoundManager makes it sound
-/// right for the listener (distance, direction, Doppler effect).
+/// The listener is always at the origin and faces north: x grows to the right
+/// ear, y grows to the back (south). The owner (a soundlet, which knows the
+/// player and the world) sets where the source is and how loud it is; the
+/// SoundManager makes it sound right (distance, ear, dull from behind, Doppler).
 class SoundSource {
   // the sound file, e.g. 'assets/audio/steps-grass.mp3'
   final String asset;
 
-  Pos position;
+  // in cells, relative to the listener
+  Vector2 relativePosition = Vector2.zero();
 
-  // units per second, for the Doppler effect
-  Vector2 velocity = Vector2.zero();
+  // in cells per second, relative to the listener, for the Doppler effect;
+  // zero for a source that goes along with the listener
+  Vector2 relativeVelocity = Vector2.zero();
 
   // 0..1, set by the owner; 0 is silent
   double volume = 0;
@@ -34,7 +37,6 @@ class SoundSource {
 
   SoundSource({
     required this.asset,
-    required this.position,
     this.distanceModel = DistanceModel.inverse,
     this.refDistance = 1,
     this.maxDistance = 20,

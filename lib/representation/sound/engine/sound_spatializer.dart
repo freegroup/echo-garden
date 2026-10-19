@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/representation/sound/engine/sound_listener.dart';
 import 'package:echo_garden/representation/sound/engine/sound_source.dart';
+import 'package:flame/components.dart';
 
 /// How one source sounds for the listener right now.
 class SoundMix {
@@ -19,7 +19,8 @@ class SoundMix {
   });
 }
 
-/// Computes how a source sounds for the listener. It follows the known pattern
+/// Computes how a source sounds for the listener, which is at the origin and
+/// faces north (see SoundSource). It follows the known pattern
 /// of 3D audio engines (Web Audio API, OpenAL, SoLoud), in 2D:
 /// - the volume falls off with the distance (see [distanceGain]),
 /// - the pan comes from the direction: east is the right ear,
@@ -28,13 +29,12 @@ class SoundMix {
 ///   the head shadows sounds from behind,
 /// - the Doppler effect raises what comes closer and lowers what goes away
 ///   (see [dopplerShift]).
-SoundMix spatialize(SoundListener listener, SoundSource source) {
+SoundMix spatialize(SoundSource source) {
   final space = kGameConfiguration.sounds.space;
-  final double unitsPerCell = kGameConfiguration.grid.gridWidth.toDouble();
 
   // from the listener to the source, in cells; y grows to the south
-  double dx = (source.position.x - listener.position.x) / unitsPerCell;
-  double dy = (source.position.y - listener.position.y) / unitsPerCell;
+  double dx = source.relativePosition.x;
+  double dy = source.relativePosition.y;
   double distance = sqrt(dx * dx + dy * dy);
 
   // a source right at the listener is heard in front, with both ears
@@ -49,7 +49,7 @@ SoundMix spatialize(SoundListener listener, SoundSource source) {
   // a factor, not by a fixed amount of Hz.
   double cutoff = space.frontCutoff * pow(space.rearCutoff / space.frontCutoff, behind);
 
-  double speed = (1 - behind * space.rearPitchDrop) * dopplerShift(listener, source);
+  double speed = (1 - behind * space.rearPitchDrop) * dopplerShift(source);
 
   return SoundMix(
     volume: source.volume * distanceGain(source, distance),
@@ -74,33 +74,25 @@ double distanceGain(SoundSource source, double distance) {
   };
 }
 
-/// The Doppler effect, as in OpenAL: only the speeds along the line between
-/// source and listener count. Returns the factor for the pitch: above 1 when
-/// the two come closer, below 1 when they move apart.
-double dopplerShift(SoundListener listener, SoundSource source) {
+/// The Doppler effect: only the speed along the line between source and
+/// listener counts. The source moves relative to the resting listener, as
+/// in the classic formula c / (c - v). Returns the factor for the pitch: above
+/// 1 when the source comes closer, below 1 when it moves away.
+double dopplerShift(SoundSource source) {
   final space = kGameConfiguration.sounds.space;
-  final double unitsPerCell = kGameConfiguration.grid.gridWidth.toDouble();
 
-  // from the source to the listener, in cells
-  double dx = (listener.position.x - source.position.x) / unitsPerCell;
-  double dy = (listener.position.y - source.position.y) / unitsPerCell;
-  double distance = sqrt(dx * dx + dy * dy);
+  double distance = source.relativePosition.length;
   if (distance == 0) return 1;
-  double ux = dx / distance;
-  double uy = dy / distance;
+  // from the source to the listener (at the origin)
+  Vector2 towardsListener = -source.relativePosition / distance;
 
-  // speeds along that line, in cells per second, positive in the direction
-  // from the source to the listener: a source with a positive speed comes
-  // closer, a listener with a positive speed moves away
-  double sourceSpeed = (source.velocity.x * ux + source.velocity.y * uy) / unitsPerCell;
-  double listenerSpeed = (listener.velocity.x * ux + listener.velocity.y * uy) / unitsPerCell;
+  // in cells per second, positive when the source comes closer
+  double approaching = source.relativeVelocity.dot(towardsListener);
 
   // never close to the speed of sound, so the formula stays finite
   double limit = 0.9 * space.speedOfSound / space.dopplerFactor;
-  sourceSpeed = min(sourceSpeed, limit);
-  listenerSpeed = min(listenerSpeed, limit);
+  approaching = min(approaching, limit);
 
   double c = space.speedOfSound;
-  double f = space.dopplerFactor;
-  return (c - f * listenerSpeed) / (c - f * sourceSpeed);
+  return c / (c - space.dopplerFactor * approaching);
 }
