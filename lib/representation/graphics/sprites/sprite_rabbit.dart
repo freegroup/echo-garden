@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/representation/graphics/agent.dart';
+import 'package:echo_garden/representation/graphics/sprites/sprite_agent.dart';
 import 'package:echo_garden/representation/graphics/pixels.dart';
 import 'package:echo_garden/model/cell.dart';
 import 'package:flame/components.dart';
@@ -29,7 +29,7 @@ enum RabbitView {
 const List<String> _furColors = ["brown", "grey"];
 
 /// Shows a rabbit. It looks in the direction of its last hop.
-class RabbitTile extends AgentVisualization {
+class SpriteRabbit extends SpriteAgent {
   // Each rabbit keeps its fur color, even when its tile is created again
   // after it left the visible area.
   late final String _furColor;
@@ -43,7 +43,7 @@ class RabbitTile extends AgentVisualization {
 
   final Paint _paint = Paint()..isAntiAlias = false;
 
-  RabbitTile({required super.agent, required super.position})
+  SpriteRabbit({required super.agent, required super.position})
       : super(anchor: Anchor.topLeft, size: Vector2.all(kGameConfiguration.world.tileSize)) {
     _furColor = _furColors[agent.id % _furColors.length];
     _lastCell = agent.cell;

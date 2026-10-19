@@ -1,19 +1,19 @@
 import 'dart:ui';
 
 import 'package:echo_garden/configuration.dart';
-import 'package:echo_garden/representation/graphics/agent.dart';
+import 'package:echo_garden/representation/graphics/sprites/sprite_agent.dart';
 import 'package:echo_garden/representation/world_view.dart';
 import 'package:flame/components.dart';
 
-class ColoredSquare extends AgentVisualization {
-  ColoredSquare(
+class SpriteSquare extends SpriteAgent {
+  SpriteSquare(
       {required super.position, this.color = const Color(0xFF000000), required super.agent})
       : super(
           anchor: Anchor.topLeft,
           size: Vector2.all(kGameConfiguration.world.tileSize),
         );
 
-  factory ColoredSquare.red(AgentView agent, Vector2 position) => ColoredSquare(
+  factory SpriteSquare.red(AgentView agent, Vector2 position) => SpriteSquare(
         agent: agent,
         position: position,
         color: const Color(0xFFFF0000),

@@ -3,53 +3,53 @@ import 'dart:ui';
 
 import 'package:echo_garden/configuration.dart';
 import 'package:echo_garden/representation/graphics/game.dart';
-import 'package:echo_garden/representation/graphics/agent.dart';
+import 'package:echo_garden/representation/graphics/sprites/sprite_agent.dart';
 import 'package:echo_garden/representation/graphics/air_debug_renderer.dart';
-import 'package:echo_garden/representation/graphics/ground_renderer.dart';
-import 'package:echo_garden/representation/graphics/layer.dart';
+import 'package:echo_garden/representation/graphics/sprites/sprite_layer.dart';
 import 'package:echo_garden/representation/graphics/pixels.dart';
-import 'package:echo_garden/representation/graphics/visualization_factory.dart';
+import 'package:echo_garden/representation/graphics/sprites/sprite_factory.dart';
+import 'package:echo_garden/representation/graphics/tiles/tile_renderer.dart';
 import 'package:echo_garden/model/index.dart';
 import 'package:echo_garden/representation/world_view.dart';
 import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
 import 'package:flutter/material.dart';
 
-/// Draws the tiles of the model.
+/// Draws the world: the tiles (ground, grass, plants; see TileRenderer) and
+/// above them the sprites of the agents that move (rabbits).
 ///
-/// To keep the game fast, only agents in the visible area get a tile.
+/// To keep the game fast, only agents in the visible area get a sprite.
 /// The GraphicsRepresentation tells the world when agents change.
 class WorldVisualization extends World with HasGameRef<GameVisualization> {
   final WorldView worldView;
 
   late Vector2 _canvasSize;
 
-  // the tiles of all agents that are currently shown
-  final Map<AgentView, AgentVisualization> _visualizations = {};
+  // the sprites of all agents that are currently shown
+  final Map<AgentView, SpriteAgent> _visualizations = {};
 
   Rect _cellToShow = const Rect.fromLTWH(0, 0, 0, 0);
-  late Map<String, TileLayer> _layersMap;
-  late final GroundRenderer _groundRenderer;
+  late Map<String, SpriteLayer> _layersMap;
+  late final TileRenderer _tileRenderer;
   late final AirDebugRenderer _airDebugRenderer;
 
   WorldVisualization({required this.worldView}) {
     _canvasSize = cellToPixel(Cell(kGameConfiguration.grid.mapWidth, kGameConfiguration.grid.mapHeight));
 
-    _groundRenderer = GroundRenderer(worldView: worldView)
+    _tileRenderer = TileRenderer(worldView: worldView)
       ..priority = 0
       ..size = _canvasSize;
 
-    // the ground is drawn by the ground renderer; these layers hold the
-    // per-agent tiles that sit on top of it
+    // the tiles draw what stays on its cell; these layers hold the sprites of
+    // the agents that move, above the tiles
     _layersMap = {
-      PlantModel.staticLayerId: TileLayer(priority: 3),
-      ActorModel.staticLayerId: TileLayer(priority: 4),
+      ActorModel.staticLayerId: SpriteLayer(priority: 4),
     };
   }
 
   @override
   Future<void> onLoad() async {
-    add(_groundRenderer);
+    add(_tileRenderer);
     // the wind arrows: above trees and rabbits, below the player (500)
     _airDebugRenderer = AirDebugRenderer(worldView: worldView)
       ..priority = 450
@@ -117,10 +117,10 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
       for (int y = startY; y <= endY; y++) {
         Cell cell = Cell(x, y);
 
-        // fill the per-agent layers (plants, rabbits) with their tiles
+        // fill the sprite layers (rabbits) with their sprites
         for (var entry in _layersMap.entries) {
           final agent = worldView.agentAt(cell, entry.key);
-          if (agent != null && !isGroundCover(agent) && !_visualizations.containsKey(agent)) {
+          if (agent != null && !_visualizations.containsKey(agent)) {
             _show(agent, entry.value);
           }
         }
@@ -153,8 +153,8 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
         cell.y <= _cellToShow.bottom;
   }
 
-  void _show(AgentView agent, TileLayer layer) {
-    AgentVisualization visualization = createVisualization(agent);
+  void _show(AgentView agent, SpriteLayer layer) {
+    SpriteAgent visualization = createSprite(agent);
     // not awaited: while the tile loads, setCellsToShow must already see the
     // agent as visible, otherwise it would create a second visualization
     layer.add(visualization);
@@ -166,9 +166,9 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
     _airDebugRenderer.isShown = !_airDebugRenderer.isShown;
   }
 
-  /// Removes all tiles. The next frame creates them again from the world view.
+  /// Removes all sprites. The next frame creates them again from the world view.
   void resync() {
-    for (AgentVisualization visualization in _visualizations.values) {
+    for (SpriteAgent visualization in _visualizations.values) {
       visualization.removeFromParent();
     }
     _visualizations.clear();
@@ -176,21 +176,21 @@ class WorldVisualization extends World with HasGameRef<GameVisualization> {
   }
 
   void showIfVisible(AgentView agent) {
-    // the ground and the grass are drawn by the ground renderer, not per agent
-    TileLayer? layer = _layersMap[agent.layerId];
-    if (layer == null || isGroundCover(agent)) return;
+    // what stays on its cell is drawn by the tiles, not as a sprite
+    SpriteLayer? layer = _layersMap[agent.layerId];
+    if (layer == null) return;
 
-    // only agents in the visible area get a tile
+    // only agents in the visible area get a sprite
     if (_isInView(agent.cell)) {
-      // the agent was created right now, so it can't have a tile yet
+      // the agent was created right now, so it can't have a sprite yet
       assert(!_visualizations.containsKey(agent));
       _show(agent, layer);
     }
   }
 
   void hide(AgentView agent) {
-    // agents outside of the visible area have no tile
-    AgentVisualization? visualization = _visualizations.remove(agent);
+    // agents outside of the visible area have no sprite
+    SpriteAgent? visualization = _visualizations.remove(agent);
     visualization?.removeFromParent();
   }
 

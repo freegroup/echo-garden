@@ -13,7 +13,7 @@ import 'package:vibration/vibration.dart';
 /// Shows the player of the model on the screen.
 ///
 /// The sprite only follows the Player; it never moves the player itself.
-class PlayerSprite extends SpriteAnimationComponent with HasGameReference<GameVisualization> {
+class SpritePlayer extends SpriteAnimationComponent with HasGameReference<GameVisualization> {
   final Player _player;
 
   final double _animationSpeed = 0.01;
@@ -31,7 +31,7 @@ class PlayerSprite extends SpriteAnimationComponent with HasGameReference<GameVi
 
   final Vector2 oldPosition = Vector2.all(0);
 
-  PlayerSprite({required Player player})
+  SpritePlayer({required Player player})
       : _player = player,
         super(size: Vector2.all(96), anchor: Anchor.center) {
     priority = 500;

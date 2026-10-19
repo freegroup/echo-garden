@@ -1,4 +1,4 @@
-import 'package:echo_garden/representation/graphics/player_sprite.dart';
+import 'package:echo_garden/representation/graphics/sprites/sprite_player.dart';
 import 'package:echo_garden/representation/graphics/world.dart';
 import 'package:echo_garden/session/player.dart';
 import 'package:echo_garden/representation/world_view.dart';
@@ -10,13 +10,13 @@ class GameVisualization extends FlameGame {
 
   @override
   final WorldVisualization world;
-  late final PlayerSprite player;
+  late final SpritePlayer player;
 
   GameVisualization({required WorldView worldView, required Player player})
       : world = WorldVisualization(worldView: worldView) {
     cameraComponent = CameraComponent(world: world);
 
-    this.player = PlayerSprite(player: player);
+    this.player = SpritePlayer(player: player);
     world.add(this.player);
 
     cameraComponent.follow(this.player);
