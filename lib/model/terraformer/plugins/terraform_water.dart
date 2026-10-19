@@ -4,6 +4,7 @@ import 'package:echo_garden/model/terraformer/terraform_plugin.dart';
 import 'package:echo_garden/model/terraformer/terrain_map.dart';
 
 /// Water and land: the lowest part of the map becomes water, the rest soil.
+/// Then the coasts are smoothed, so they are round instead of frayed.
 class TerraformWater extends TerraformPlugin {
   @override
   void phase00Generate(TerrainMap map) {
@@ -17,6 +18,13 @@ class TerraformWater extends TerraformPlugin {
         bool isWater = map.heights[x][y] < waterThreshold;
         map.setGround(Cell(x, y), isWater ? WaterModel : SoilModel);
       }
+    }
+  }
+
+  @override
+  void phase01Smooth(TerrainMap map) {
+    for (int pass = 0; pass < kGameConfiguration.world.coastSmoothing; pass++) {
+      smoothGround(map, WaterModel, SoilModel);
     }
   }
 }

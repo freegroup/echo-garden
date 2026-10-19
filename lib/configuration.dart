@@ -44,6 +44,7 @@ const kGameConfiguration = (
     tileSnap: 1.0,
     waterPercentage: 40.0,
     minIslandSize: 20, // in cells: smaller pieces of land become water, bigger ones get a bridge
+    coastSmoothing: 2, // passes that smooth the coasts: the more, the rounder
   ),
   mountain: (
     // share of the whole map, taken from the highest land

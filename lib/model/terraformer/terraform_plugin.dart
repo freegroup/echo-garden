@@ -67,6 +67,41 @@ abstract class TerraformPlugin {
     return count;
   }
 
+  /// Smooths the border between the grounds [a] and [b], as a cellular
+  /// automaton does: a cell of one of them takes the one that most cells of
+  /// its 3 x 3 block (itself included) have; on a tie it stays. All cells
+  /// decide at the same time, so the order does not matter. Other grounds are
+  /// left alone and do not count.
+  void smoothGround(TerrainMap map, Type a, Type b) {
+    List<Cell> becomeA = [];
+    List<Cell> becomeB = [];
+    for (int x = 0; x < map.width; x++) {
+      for (int y = 0; y < map.height; y++) {
+        Cell cell = Cell(x, y);
+        Type? ground = map.groundAt(cell);
+        if (ground != a && ground != b) continue;
+
+        int countA = 0;
+        int countB = 0;
+        for (int dx = -1; dx <= 1; dx++) {
+          for (int dy = -1; dy <= 1; dy++) {
+            Type? around = map.groundAt(Cell(x + dx, y + dy));
+            if (around == a) countA++;
+            if (around == b) countB++;
+          }
+        }
+        if (countA > countB && ground != a) becomeA.add(cell);
+        if (countB > countA && ground != b) becomeB.add(cell);
+      }
+    }
+    for (Cell cell in becomeA) {
+      map.setGround(cell, a);
+    }
+    for (Cell cell in becomeB) {
+      map.setGround(cell, b);
+    }
+  }
+
   /// The heights of the cells of the map, sorted. The height grid is bigger
   /// than the map (its size must be 2^n + 1), so only the part that is used
   /// counts.

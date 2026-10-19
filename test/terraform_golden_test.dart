@@ -32,18 +32,19 @@ int terrainFingerprint(GameModel model) {
   return hash;
 }
 
-// The fingerprints of the maps the terraformer made before it was split into
-// plugins. Splitting it must not change any map.
+// The fingerprints of the maps the terraformer makes, so no change of the maps
+// goes unnoticed. When a change of the maps is wanted (e.g. smoother coasts),
+// look at the new maps and then set these numbers anew.
 const Map<int, int> goldenFingerprints = {
-  0: 420104653,
-  1: 2972355515,
-  2: 3982952587,
-  3: 1030959847,
-  4: 1885629984,
+  0: 3920837536,
+  1: 188489727,
+  2: 940826424,
+  3: 1358751492,
+  4: 3696442347,
 };
 
 void main() {
-  test('the terraformer makes the same maps as before', () {
+  test('the terraformer makes the maps it is known to make', () {
     for (int seed = 0; seed < 5; seed++) {
       final model = GameModel(
           width: kGameConfiguration.grid.mapWidth,
